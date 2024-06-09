@@ -1,0 +1,8 @@
+2024-06-09 22:33:29 INFO     We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2024-06-09 22:33:42 INFO     Model is loaded!
+2024-06-09 22:33:43 INFO     Tokenizer is loaded!
+2024-06-09 22:33:50 INFO     Contexts were splited into 27051 sentence groups, which are 63.5 groups on average per one report
+2024-06-09 22:33:50 INFO     Contexts were splited into 9482 paragraphs, which are 22.258215962441316 paragraphs on average per one report. There are 1171 unique topics with frequency threshold (greater or equal) 0. The overall paragraph average length (characters) is 242.76566125290023
+2024-06-09 22:37:47 INFO     paragraphs translated
+2024-06-09 22:40:07 INFO     paragraphs translated
+2024-06-09 22:43:56 INFO     paragraphs translated

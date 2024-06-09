@@ -1,0 +1,25 @@
+2024-06-09 22:33:28 INFO     We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+2024-06-09 22:33:35 INFO     Model is loaded!
+2024-06-09 22:33:37 INFO     Tokenizer is loaded!
+2024-06-09 22:33:39 INFO     Contexts were splited into 7157 sentence groups, which are 27.31679389312977 groups on average per one report
+2024-06-09 22:33:42 WARNING  The evidenc 'CEFPODOXIME PROXETIL 200 MG PO BID X 16 doses
+Food/Drug Interaction Instruction Give with meals
+' is in wrong format and it does not occure in the paragraph 'POTENTIALLY SERIOUS INTERACTION: WARFARIN &amp; SIMVASTATIN
+Reason for override: already tolerated , home medication ,
+aware
+CEFPODOXIME PROXETIL 200 MG PO BID X 16 doses
+Starting Today ( 6/25 ) HOLD IF: rash
+Food/Drug Interaction Instruction Give with meals
+Alert overridden: Override added on 11/4/05 by :
+on order for CEFPODOXIME PROXETIL PO ( ref # 703442345 )
+Pt. has a POSSIBLE allergy to Penicillins; reaction is
+RASH. Reason for override: cannot tolerate floroquinolones
+and needs gram neg coverage. has
+tolerated cefalosporins well in the past.
+'
+2024-06-09 22:33:44 INFO     Contexts were splited into 5081 paragraphs, which are 19.393129770992367 paragraphs on average per one report. There are 691 unique topics with frequency threshold (greater or equal) 0. The overall paragraph average length (characters) is 344.04526667978746
+2024-06-09 22:35:36 INFO     paragraphs translated
+2024-06-09 22:38:56 INFO     paragraphs translated
+2024-06-09 22:40:26 INFO     paragraphs translated
+2024-06-09 22:42:32 INFO     paragraphs translated
+2024-06-09 22:44:52 INFO     paragraphs translated
