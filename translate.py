@@ -3,6 +3,7 @@ import logging
 import json
 import random
 import os
+import numpy as np
 from src.paragraphizer import Paragraphizer
 from datasets.utils.logging import disable_progress_bar
 from src.translate import translate_dataset
