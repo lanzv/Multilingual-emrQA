@@ -3,7 +3,7 @@ import logging
 import os, json
 import numpy as np
 import time
-from src.utils import load_translator_model
+from src.utils import load_translator_model, split_text
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -31,28 +31,35 @@ def translate_questions(model, tokenizer, questions_to_translate, target_languag
     return result_translations
 
 
-def translate_paragraph(model, tokenizer, text, target_language = "cs", no_repeat_ngram_size=12, translated_medical_info_message="Na základě lékařských zpráv."):
+def translate_paragraph(model, tokenizer, text, target_language = "cs", no_repeat_ngram_size=12, translated_medical_info_message="Na základě lékařských zpráv.", text_length_limit=750):
+    if len(text) > text_length_limit:
+        text1, text2 = split_text(text)
+        trans1 = translate_paragraph(model, tokenizer, text1, target_language, no_repeat_ngram_size, translated_medical_info_message, text_length_limit)
+        trans2 = translate_paragraph(model, tokenizer, text2, target_language, no_repeat_ngram_size, translated_medical_info_message, text_length_limit)
+        return trans1 + trans2
+    
     translation = ""
     medical_info_message = "Based on medical reports."
     spaces = "   "
-    while len(spaces) <= 25 and not translation[-len(translated_medical_info_message):] == translated_medical_info_message:
+    while len(spaces) <= 25 and (len(translation[:-len(translated_medical_info_message)].strip()) < 0.8 * len(text) or not translation[-len(translated_medical_info_message):] == translated_medical_info_message):
         inputs = tokenizer("<2{}> {}".format(target_language, text + spaces + medical_info_message), return_tensors="pt").input_ids.to(model.device)
         outputs = model.generate(input_ids=inputs, max_new_tokens=int(1.5*inputs.shape[1]), no_repeat_ngram_size=no_repeat_ngram_size)
         translation = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
         spaces += "     "
 
     spaces = "   "
-    while not translation[-len(translated_medical_info_message):] == translated_medical_info_message:
+    while len(translation[:-len(translated_medical_info_message)].strip()) < 0.8 * len(text) or not translation[-len(translated_medical_info_message):] == translated_medical_info_message:
         inputs = tokenizer("<2{}> {}".format(target_language, text + spaces + medical_info_message), return_tensors="pt").input_ids.to(model.device)
         outputs = model.generate(input_ids=inputs, do_sample=True, top_k=15, top_p=0.97, max_new_tokens=int(1.5*inputs.shape[1]))
         translation = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
         spaces += "     "
         if len(spaces) > 150:
-            logging.warning("The medical info message '{}' cannot be found in '{}' of the original '{}'".format(translated_medical_info_message, translation, text))
-            return translation
+            logging.warning("The medical info message '{}' cannot be found in \n'{}'\n of the original \n'{}'\n or the length of the translated is too small. Returning original paragraph as untranslatable.".format(translated_medical_info_message, translation, text))
+            return [text]
     
     translation = translation[:-len(translated_medical_info_message)].strip()
-    return translation
+
+    return [translation]
 
 
 

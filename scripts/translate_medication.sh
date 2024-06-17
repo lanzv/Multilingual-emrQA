@@ -4,7 +4,7 @@
 #SBATCH -p gpu-troja
 #SBATCH -G 1
 #SBATCH --mem-per-gpu=50G
-#SBATCH --nodelist=tdll-3gpu2
+#SBATCH --nodelist=tdll-3gpu4
  
 
 python translate.py --translation True --topics "medication"

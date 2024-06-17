@@ -8,6 +8,7 @@ import json
 import os
 import time
 import random
+from src.utils import split_text
 import logging
 import numpy as np
 logging.basicConfig(
@@ -45,16 +46,31 @@ ALIGN_EVIDENCE = {
 }
 
 def align_with_awesome(aligner, src, tgt, original_evidence, original_start):
-    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, threshold=1e-3)
-    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start)
+    assert len(src) == len(tgt)
+    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, src_language="english", tgt_language="czech")
+    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, src_language="czech", tgt_language="english")
     scores = evaluate_evidence_alignment(prediction_evidence, prediction_start, original_evidence, original_start)
     return new_evidence, new_start, scores
 
 def align_with_levenshtein(aligner, src, tgt, original_evidence, original_start, target_language="cs"): # TODO make the "cs" more general to other languages
+    src = ' '.join(src)
+    tgt = ' '.join(tgt)
+    if len(tgt) == 0:
+        logging.warning("There is an empty translation '{}' of the paragraph '{}'".format(tgt, src))
+        return "", 0, evaluate_evidence_alignment("", 0, original_evidence, original_start)
+
     new_evidence, new_start = aligner.align_evidence(original_evidence, tgt, target_language=target_language)
     prediction_evidence, prediction_start = aligner.align_evidence(new_evidence, src, target_language="en")
     scores = evaluate_evidence_alignment(prediction_evidence, prediction_start, original_evidence, original_start)
     return new_evidence, new_start, scores
+
+def split_paragraph(text, text_length_limit=750):
+    if len(text) > text_length_limit:
+        text1, text2 = split_text(text, False)
+        text1 = split_paragraph(text1)
+        text2 = split_paragraph(text2)
+        return text1 + text2
+    return [text]
 
 
 def main(args):
@@ -86,7 +102,13 @@ def main(args):
     # init scores
     f1s = []
     ems = []
+    esms = []
     f1s_span = []
+    ps_span = []
+    rs_span = []
+    str_dists = []
+    mid_dists = []
+    end_dists = []
     evidence_time = time.time()
     for report_id, (src_report, tgt_report) in enumerate(zip(dataset["data"], translated_dataset["data"])):        
         evidence_cache = {}
@@ -99,11 +121,17 @@ def main(args):
                         translated_text, translated_answer_start, scores = evidence_cache[ans["answer_start"]][ans["text"]]
                     else:
                         # align evidence
-                        translated_text, translated_answer_start, scores = ALIGN_EVIDENCE[args.aligner_name](aligner, src_paragraph["context"], tgt_paragraph["context"], ans["text"], ans["answer_start"])
+                        translated_text, translated_answer_start, scores = ALIGN_EVIDENCE[args.aligner_name](aligner, split_paragraph(src_paragraph["context"]), tgt_paragraph["context"], ans["text"], ans["answer_start"])
                         # collect scores
                         f1s.append(scores["f1"])
                         ems.append(scores["exact_match"])
+                        esms.append(scores["exact_submatch"])
                         f1s_span.append(scores["f1_span"])
+                        ps_span.append(scores["precision_span"])
+                        rs_span.append(scores["recall_span"])
+                        str_dists.append(scores["start_distance"])
+                        mid_dists.append(scores["middle_distance"])
+                        end_dists.append(scores["end_distance"])
                         # add to cache
                         if not ans["answer_start"] in evidence_cache:
                             evidence_cache[ans["answer_start"]] = {}
@@ -120,7 +148,13 @@ def main(args):
     final_score = {
         "f1": np.mean(f1s),
         "exact_match": np.mean(ems),
+        "exact_submatch": np.mean(esms),
         "f1_span": np.mean(f1s_span),
+        "precision_span": np.mean(ps_span),
+        "recall_span": np.mean(rs_span),
+        "start_distance": np.mean(str_dists),
+        "middle_distance": np.mean(mid_dists),
+        "end_distance": np.mean(end_dists),
         "overall_time": time.time() - evidence_time
     }
     scores = json.dumps(final_score, indent = 4) 

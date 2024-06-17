@@ -63,7 +63,7 @@ def main(args):
                 logging.info("\tAverage Answers Time: {} s\n\t\tThe longest answers: {} s\n\t\tThe shortest answers {} s".format(np.average(answers_times), np.max(answers_times), np.min(answers_times))) 
             if len(context_times) > 0:
                 logging.info("\tAverage Report's Paragraphs Time: {} s\n\t\tThe longest report: {} s\n\t\tThe shortest report {} s".format(np.average(context_times), np.max(context_times), np.min(context_times)))
-            logging.info("\tTotal {} time: {} s".format(target_file_name, (time.time() - dataset_time)))
+            logging.info("\tTotal time: {} s".format((time.time() - dataset_time)))
 
 
     if args.evidence_alignment:
