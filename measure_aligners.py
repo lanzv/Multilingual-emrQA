@@ -3,6 +3,7 @@ import logging
 from src.paragraphizer import Paragraphizer
 from src.evidence_alignment.awesome import AwesomeWrapper
 from src.evidence_alignment.levenshtein import LevenshteinWrapper
+from src.evidence_alignment.fast_align import FastAlignWrapper
 from src.evidence_alignment.evaluate import evaluate_evidence_alignment
 import json
 import os
@@ -36,14 +37,29 @@ parser.add_argument('--seed', type=int, help='random seed', default=55)
 
 MODELS = {
     "Awesome": lambda model_path: AwesomeWrapper(model_path),
-    "Levenshtein": lambda model_path: LevenshteinWrapper(model_path)
+    "Levenshtein": lambda model_path: LevenshteinWrapper(model_path),
+    "FastAlign": lambda model_path: FastAlignWrapper(model_path)
 }
 
 
 ALIGN_EVIDENCE = {
     "Awesome": lambda aligner, src, tgt, original_evidence, original_start: align_with_awesome(aligner, src, tgt, original_evidence, original_start),
     "Levenshtein": lambda aligner, src, tgt, original_evidence, original_start: align_with_levenshtein(aligner, src, tgt, original_evidence, original_start),
+    "FastAlign": lambda aligner, src, tgt, original_evidence, original_start: align_with_fastalign(aligner, src, tgt, original_evidence, original_start) 
 }
+
+def align_with_fastalign(aligner, src, tgt, original_evidence, original_start):
+    #from src.utils import tokenize
+    #for par_src, par_tgt in zip(src, tgt):
+    #    src_tokens = tokenize(par_src, language="english", warnings = False)[0]
+    #    tgt_tokens = tokenize(par_tgt, language="czech", warnings = False)[0]
+    #    PARALLEL_CORPUS += "{} ||| {}\n".format(' '.join(tgt_tokens), ' '.join(src_tokens))
+    #return "", -1, {'exact_match': 0.0, 'exact_submatch': 0.0, 'f1': 0.0, 'f1_span': 0.0, 'precision_span': 0.0, 'recall_span': 0.0, 'start_distance': 0.0, 'middle_distance': 0.0, 'end_distance': 0.0}, PARALLEL_CORPUS
+    assert len(src) == len(tgt)
+    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, reverse=True, src_language="english", tgt_language="czech")
+    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, reverse=False, src_language="czech", tgt_language="english")
+    scores = evaluate_evidence_alignment(prediction_evidence, prediction_start, original_evidence, original_start)
+    return new_evidence, new_start, scores
 
 def align_with_awesome(aligner, src, tgt, original_evidence, original_start):
     assert len(src) == len(tgt)
@@ -109,6 +125,9 @@ def main(args):
     str_dists = []
     mid_dists = []
     end_dists = []
+    abs_str_dists = []
+    abs_mid_dists = []
+    abs_end_dists = []
     evidence_time = time.time()
     for report_id, (src_report, tgt_report) in enumerate(zip(dataset["data"], translated_dataset["data"])):        
         evidence_cache = {}
@@ -132,6 +151,9 @@ def main(args):
                         str_dists.append(scores["start_distance"])
                         mid_dists.append(scores["middle_distance"])
                         end_dists.append(scores["end_distance"])
+                        abs_str_dists.append(scores["absolute_start_distance"])
+                        abs_mid_dists.append(scores["absolute_middle_distance"])
+                        abs_end_dists.append(scores["absolute_end_distance"])
                         # add to cache
                         if not ans["answer_start"] in evidence_cache:
                             evidence_cache[ans["answer_start"]] = {}
@@ -139,7 +161,8 @@ def main(args):
                     new_answers.append({"text": translated_text, "answer_start": translated_answer_start, "scores": scores})
                 # rewrite answers to translated aligned ones
                 qa["answers"] = new_answers
-        logging.info("{}. evidences measured".format(report_id))
+        logging.info("{}. evidences measured - em: {} f1 span: {}".format(report_id, np.mean(ems), np.mean(f1s_span)))
+
         # store results
         with open(output_path, 'w', encoding='utf8') as f:
             json.dump(translated_dataset, f, ensure_ascii=False)
@@ -155,11 +178,17 @@ def main(args):
         "start_distance": np.mean(str_dists),
         "middle_distance": np.mean(mid_dists),
         "end_distance": np.mean(end_dists),
+        "absolute_start_distance": np.mean(abs_str_dists),
+        "absolute_middle_distance": np.mean(abs_mid_dists),
+        "absolute_end_distance": np.mean(abs_end_dists),
         "overall_time": time.time() - evidence_time
     }
     scores = json.dumps(final_score, indent = 4) 
     print(scores)
 
+    #text_file = open("relations_parallel.txt", "w")
+    #text_file.write(PARALLEL_CORPUS)
+    #text_file.close()
 
 
 

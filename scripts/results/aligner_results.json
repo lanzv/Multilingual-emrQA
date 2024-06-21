@@ -1,30 +1,128 @@
-{
-    "medication": {
-        "Levenshtein": {
-            "f1": 77.93329231835702,
-            "exact_match": 25.04280821917808,
-            "f1_span": 74.04195536273805,
-            "overall_time": 12195.992993354797
+{    
+    "splited paragraph translation": {   
+        "medication": {
+            "Levenshtein": {
+                "f1": 81.52424625652633,
+                "exact_match": 26.455479452054796,
+                "exact_submatch": 74.08675799086758,
+                "f1_span": 78.69112322391288,
+                "precision_span": 72.55780105289527,
+                "recall_span": 90.58840479132533,
+                "start_distance": -15.292522831050228,
+                "middle_distance": -4.17701198630137,
+                "end_distance": 6.938498858447488,
+                "absolute_start_distance": 36.59474885844749,
+                "absolute_middle_distance": 30.77204623287671,
+                "absolute_end_distance": 32.17965182648402,
+                "overall_time": 12834.972502946854
+            },
+            "FastAlign": {
+                "f1": 90.27936680682286,
+                "exact_match": 52.8824200913242,
+                "exact_submatch": 76.72659817351598,
+                "f1_span": 89.78253476450124,
+                "precision_span": 89.07357859498468,
+                "recall_span": 95.17856143212849,
+                "start_distance": -5.518264840182648,
+                "middle_distance": 1.4585473744292237,
+                "end_distance": 8.435359589041095,
+                "absolute_start_distance": 10.815353881278538,
+                "absolute_middle_distance": 9.150042808219178,
+                "absolute_end_distance": 10.49300799086758,
+                "overall_time": 2951.560397863388
+            },
+            "Awesome": {
+                "f1": 92.50611124092961,
+                "exact_match": 66.21004566210046,
+                "exact_submatch": 88.09931506849315,
+                "f1_span": 92.30104504490956,
+                "precision_span": 90.4308118866919,
+                "recall_span": 97.88303861822429,
+                "start_distance": -4.7103310502283104,
+                "middle_distance": 1.3075057077625571,
+                "end_distance": 7.325342465753424,
+                "absolute_start_distance": 7.905536529680365,
+                "absolute_middle_distance": 6.762842465753424,
+                "absolute_end_distance": 8.504280821917808,
+                "overall_time": 23221.305606365204
+            }
         },
-        "Awesome": {
-            "f1": 71.29744124339635,
-            "exact_match": 49.22945205479452,
-            "f1_span": 70.69437695767823,
-            "overall_time": 17429.295860528946
+        "relations": {
+            "Levenshtein": {
+                "f1": 85.72901512564125,
+                "exact_match": 35.53117532044319,
+                "exact_submatch": 84.21681512057354,
+                "f1_span": 82.99657393937593,
+                "precision_span": 76.61733256140103,
+                "recall_span": 93.71518008544376,
+                "start_distance": -13.769932652617857,
+                "middle_distance": -3.4131001520747337,
+                "end_distance": 6.94373234846839,
+                "absolute_start_distance": 28.688029545948293,
+                "absolute_middle_distance": 22.420595263958287,
+                "absolute_end_distance": 21.941125353030632,
+                "overall_time": 26079.031792879105
+            },
+            "FastAlign": {
+                "f1": 93.24837264558862,
+                "exact_match": 68.10775581142732,
+                "exact_submatch": 81.87051922659136,
+                "f1_span": 92.56780561813078,
+                "precision_span": 92.98449243188875,
+                "recall_span": 95.622547625969,
+                "start_distance": -2.8955029328698676,
+                "middle_distance": 2.010971105800565,
+                "end_distance": 6.917445144470997,
+                "absolute_start_distance": 10.101021073213122,
+                "absolute_middle_distance": 8.802411470779926,
+                "absolute_end_distance": 9.191614164675212,
+                "overall_time": 23344.060657262802
+            },
+            "Awesome": {
+                "f1": 93.01640492022499,
+                "exact_match": 71.19270041277427,
+                "exact_submatch": 83.20660438844232,
+                "f1_span": 92.8222543501595,
+                "precision_span": 92.4547422305874,
+                "recall_span": 96.9219634915777,
+                "start_distance": -4.34423202259396,
+                "middle_distance": 1.8842602650445361,
+                "end_distance": 8.112752552683032,
+                "absolute_start_distance": 9.959482945904846,
+                "absolute_middle_distance": 7.858950684336302,
+                "absolute_end_distance": 8.705626765153161,
+                "overall_time": 37178.5414814949
+            }
         }
     },
-    "relations": {
-        "Levenshtein": {
-            "f1": 82.87122389340733,
-            "exact_match": 34.618726917227896,
-            "f1_span": 79.66739847646836,
-            "overall_time": 21691.189756155014
+    "paragraph translation": {   
+        "medication": {
+            "Levenshtein": {
+                "f1": 77.93329231835702,
+                "exact_match": 25.04280821917808,
+                "f1_span": 74.04195536273805,
+                "overall_time": 12195.992993354797
+            },
+            "Awesome": {
+                "f1": 71.29744124339635,
+                "exact_match": 49.22945205479452,
+                "f1_span": 70.69437695767823,
+                "overall_time": 17429.295860528946
+            }
         },
-        "Awesome": {
-            "f1": 72.10948964511796,
-            "exact_match": 52.422333260916794,
-            "f1_span": 71.18087730699574,
-            "overall_time": 27796.854068756104
+        "relations": {
+            "Levenshtein": {
+                "f1": 82.87122389340733,
+                "exact_match": 34.618726917227896,
+                "f1_span": 79.66739847646836,
+                "overall_time": 21691.189756155014
+            },
+            "Awesome": {
+                "f1": 72.10948964511796,
+                "exact_match": 52.422333260916794,
+                "f1_span": 71.18087730699574,
+                "overall_time": 27796.854068756104
+            }
         }
     }
 }

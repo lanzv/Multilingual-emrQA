@@ -30,7 +30,7 @@ class AwesomeWrapper:
         for token_id, (l, r) in enumerate(spans_src):
             if l <= original_start:
                 start_src_id = token_id
-            if original_start + len(original_evidence) <= r:
+            if end_src_id == None and original_start + len(original_evidence) <= r:
                 end_src_id = token_id
 
 
@@ -38,17 +38,17 @@ class AwesomeWrapper:
         end_tgt_id = 0
         alignment_exists = False
         for i, j in align_words:
-            if i >= start_src_id and i < end_src_id:
+            if i >= start_src_id and i <= end_src_id:
                 alignment_exists = True
                 if j < start_tgt_id:
                     start_tgt_id = j
                 if j > end_tgt_id:
                     end_tgt_id = j
         if not alignment_exists:
-            logging.warning("returning empty paragraph as evidence since there is no alignment for the evidence '{}' in the paragraph '{}' of translated '{}'".format(original_evidence, original_paragraph, translated_paragraph))
+            logging.warning("returning empty evidence since there is no alignment for the evidence '{}' in the paragraph '{}' of translated '{}'".format(original_evidence, original_paragraph, translated_paragraph))
         #    logging.warning("returning '' evidence with -1 span start, there is no alignment for original evidence '{}' of original paragraph '{}' and translated paragraph '{}'".format(original_evidence, original_paragraph, translated_paragraph))
         #    return "", 0
-        
+
         new_evidence = translated_paragraph[spans_tgt[start_tgt_id][0]:spans_tgt[end_tgt_id][1]]
         new_start = spans_tgt[start_tgt_id][0]
         assert new_evidence == translated_paragraph[new_start:new_start + len(new_evidence)]

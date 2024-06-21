@@ -55,11 +55,18 @@ def f1_span_score(p_start, p_end, gt_start, gt_end):
     f1 = (2 * precision * recall) / (precision + recall)
     return f1, precision, recall
 
+
+def distance_score(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start):
+    str_dist = prediction_start-ground_truth_start
+    mid_dist = (prediction_start+len(prediction_evidence)/2) - (ground_truth_start+len(ground_truth_evidence)/2)
+    end_dist = (prediction_start+len(prediction_evidence)) - (ground_truth_start+len(ground_truth_evidence))
+    return str_dist, mid_dist, end_dist
+
 def absolute_distance_score(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start):
-    beg_dist = abs(prediction_start-ground_truth_start)
+    str_dist = abs(prediction_start-ground_truth_start)
     mid_dist = abs((prediction_start+len(prediction_evidence)/2) - (ground_truth_start+len(ground_truth_evidence)/2))
     end_dist = abs((prediction_start+len(prediction_evidence)) - (ground_truth_start+len(ground_truth_evidence)))
-    return beg_dist, mid_dist, end_dist
+    return str_dist, mid_dist, end_dist
 
 
 def evaluate_evidence_alignment(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start):
@@ -68,5 +75,19 @@ def evaluate_evidence_alignment(prediction_evidence, prediction_start, ground_tr
     f1 = 100.0 * f1_score(prediction_evidence, ground_truth_evidence)
     f1_span, p_span, r_span = f1_span_score(prediction_start, prediction_start + len(prediction_evidence), ground_truth_start, ground_truth_start + len(ground_truth_evidence))
     f1_span, p_span, r_span = 100.0*f1_span, 100.0*p_span, 100.0*r_span
-    beg_dist, mid_dist, end_dist = absolute_distance_score(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start)
-    return {'exact_match': exact_match, 'exact_submatch': exact_submatch, 'f1': f1, 'f1_span': f1_span, 'precision_span': p_span, 'recall_span': r_span, 'start_distance': beg_dist, 'middle_distance': mid_dist, 'end_distance': end_dist}
+    str_dist, mid_dist, end_dist = distance_score(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start)
+    abs_str_dist, abs_mid_dist, abs_end_dist = absolute_distance_score(prediction_evidence, prediction_start, ground_truth_evidence, ground_truth_start)
+    return {
+        'exact_match': exact_match, 
+        'exact_submatch': exact_submatch, 
+        'f1': f1, 
+        'f1_span': f1_span, 
+        'precision_span': p_span, 
+        'recall_span': r_span, 
+        'start_distance': str_dist, 
+        'middle_distance': mid_dist, 
+        'end_distance': end_dist,
+        'absolute_start_distance': abs_str_dist, 
+        'absolute_middle_distance': abs_mid_dist, 
+        'absolute_end_distance': abs_end_dist
+        }
