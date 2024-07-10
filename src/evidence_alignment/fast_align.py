@@ -22,15 +22,34 @@ class FastAlignWrapper:
         # find alignments
         src_offset, tgt_offset = 0, 0
         align_words = set()
+        par_src = []
+        par_tgt = []
         for src_text, tgt_text in zip(original_paragraph, translated_paragraph):
-            temp_align_words, src_offset, tgt_offset = self.__find_alignment(src_text, tgt_text, src_offset, tgt_offset, reverse=reverse, src_language=src_language, tgt_language=tgt_language, fast_align_directory=fast_align_directory)
+            temp_align_words, src_offset, tgt_offset, temp_par_src, temp_par_tgt = self.__find_alignment(src_text, tgt_text, src_offset, tgt_offset, reverse=reverse, src_language=src_language, tgt_language=tgt_language, fast_align_directory=fast_align_directory)
             align_words = align_words | temp_align_words
+            par_src = par_src + temp_par_src
+            par_tgt = par_tgt + temp_par_tgt
+
         
         # merge texts to paragraphs
         original_paragraph = ' '.join(original_paragraph)
         translated_paragraph = ' '.join(translated_paragraph)
-        par_src, spans_src = tokenize(original_paragraph, language=src_language)
-        par_tgt, spans_tgt = tokenize(translated_paragraph, language=tgt_language)
+
+        spans_src = []
+        offset = 0
+        for token in par_src:
+            start = original_paragraph.lower().find(token, offset)
+            end = start + len(token)
+            offset = end
+            spans_src.append((start, end))
+
+        spans_tgt = []
+        offset = 0
+        for token in par_tgt:
+            start = translated_paragraph.lower().find(token, offset)
+            end = start + len(token)
+            offset = end
+            spans_tgt.append((start, end))
 
         # find evidence
         start_src_id, end_src_id = None, None
@@ -79,4 +98,4 @@ class FastAlignWrapper:
             else:
                 align_words.add((int(i) + src_offset, int(j) + tgt_offset))
                 
-        return align_words, src_offset + len(par_src), tgt_offset + len(par_tgt)
+        return align_words, src_offset + len(par_src), tgt_offset + len(par_tgt), par_src, par_tgt

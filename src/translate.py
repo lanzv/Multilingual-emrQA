@@ -30,6 +30,16 @@ def translate_questions(model, tokenizer, questions_to_translate, target_languag
     assert len(result_translations) == len(questions_to_translate)
     return result_translations
 
+def paragraph_translation_done(translation, text, translated_medical_info_message):
+    done = False
+    for message in translated_medical_info_message.split("#"):
+        if not (len(translation[:-len(message)].strip()) < 0.8 * len(text) or not translation[-len(message):] == message):
+            done = True
+        if len(text) <= 40 and not (len(translation[:-len(message)].strip()) < 0.5 * len(text) or not translation[-len(message):] == message):
+            done = True
+    #if done == False and translation != "":
+    #    logging.info("{}\n\n".format(translation))
+    return done
 
 def translate_paragraph(model, tokenizer, text, target_language = "cs", no_repeat_ngram_size=12, translated_medical_info_message="Na základě lékařských zpráv.", text_length_limit=750):
     if len(text) > text_length_limit:
@@ -41,29 +51,33 @@ def translate_paragraph(model, tokenizer, text, target_language = "cs", no_repea
     translation = ""
     medical_info_message = "Based on medical reports."
     spaces = "   "
-    while len(spaces) <= 25 and (len(translation[:-len(translated_medical_info_message)].strip()) < 0.8 * len(text) or not translation[-len(translated_medical_info_message):] == translated_medical_info_message):
+    while len(spaces) <= 25 and not paragraph_translation_done(translation, text, translated_medical_info_message):
         inputs = tokenizer("<2{}> {}".format(target_language, text + spaces + medical_info_message), return_tensors="pt").input_ids.to(model.device)
+        #inputs = tokenizer("<2{}> {}".format(target_language, text), return_tensors="pt").input_ids.to(model.device)
         outputs = model.generate(input_ids=inputs, max_new_tokens=int(1.5*inputs.shape[1]), no_repeat_ngram_size=no_repeat_ngram_size)
         translation = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+        #return [translation]
         spaces += "     "
 
     spaces = "   "
-    while len(translation[:-len(translated_medical_info_message)].strip()) < 0.8 * len(text) or not translation[-len(translated_medical_info_message):] == translated_medical_info_message:
+    while not paragraph_translation_done(translation, text, translated_medical_info_message):
         inputs = tokenizer("<2{}> {}".format(target_language, text + spaces + medical_info_message), return_tensors="pt").input_ids.to(model.device)
         outputs = model.generate(input_ids=inputs, do_sample=True, top_k=15, top_p=0.97, max_new_tokens=int(1.5*inputs.shape[1]))
         translation = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
         spaces += "     "
-        if len(spaces) > 150:
+        if len(spaces) >= 200:
             logging.warning("The medical info message '{}' cannot be found in \n'{}'\n of the original \n'{}'\n or the length of the translated is too small. Returning original paragraph as untranslatable.".format(translated_medical_info_message, translation, text))
             return [text]
-    
-    translation = translation[:-len(translated_medical_info_message)].strip()
 
-    return [translation]
+    for message in translated_medical_info_message.split("#"):
+        if message == translation[-len(message):]:
+            translation = translation[:-len(message)].strip()
+            return [translation]
+
+    raise Exception("There is no '{}' message in translation '{}'".format(translated_medical_info_message, translation))
 
 
-
-def translate_dataset(model, tokenizer, dataset, target_language="cs", translation_mode = True, evidence_detection_mode = True, output_file = "./temp.json"):
+def translate_dataset(model, tokenizer, dataset, target_language="cs", translation_mode = True, evidence_detection_mode = True, output_file = "./temp.json", translated_medical_info_message="Na základě lékařských zpráv."):
     time_analysis = {"contexts": [], "questions": [], "answers": []}
     translated_dataset = {"data":[]}
     if translation_mode:
@@ -93,7 +107,7 @@ def translate_dataset(model, tokenizer, dataset, target_language="cs", translati
 
             # translate paragraphs
             context_time = time.time()
-            translated_paragraphs = [translate_paragraph(model, tokenizer, par2tran, target_language) for par2tran in paragraphs_to_translate]
+            translated_paragraphs = [translate_paragraph(model, tokenizer, par2tran, target_language, translated_medical_info_message=translated_medical_info_message) for par2tran in paragraphs_to_translate]
             time_analysis["contexts"].append(time.time() - context_time)
             for i, new_paragraph in enumerate(translated_paragraphs):
                 new_report["paragraphs"][i]["context"] = new_paragraph

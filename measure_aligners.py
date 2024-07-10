@@ -24,6 +24,7 @@ parser.add_argument('--translation_dataset', type=str, default='./data/translati
 parser.add_argument('--dataset', type=str, default='./data/data.json')
 parser.add_argument('--output_dir', type=str, default='./data/translation_aligners')
 parser.add_argument('--dataset_title', type=str, default='medication')
+parser.add_argument('--language', type=str, default='cs')
 # aligner
 parser.add_argument('--aligner_name', type=str, default='Awesome')
 parser.add_argument('--aligner_path', type=str, default='../models/awesome-align-with-co')
@@ -34,6 +35,13 @@ parser.add_argument('--seed', type=int, help='random seed', default=55)
 
 
 
+CODE2LANGUAGE = {
+    "cs": "czech",
+    "pl": "polish",
+    "bg": "bulgarian",
+    "ro": "romanian",
+    "el": "greek"
+}
 
 MODELS = {
     "Awesome": lambda model_path: AwesomeWrapper(model_path),
@@ -43,12 +51,12 @@ MODELS = {
 
 
 ALIGN_EVIDENCE = {
-    "Awesome": lambda aligner, src, tgt, original_evidence, original_start: align_with_awesome(aligner, src, tgt, original_evidence, original_start),
-    "Levenshtein": lambda aligner, src, tgt, original_evidence, original_start: align_with_levenshtein(aligner, src, tgt, original_evidence, original_start),
-    "FastAlign": lambda aligner, src, tgt, original_evidence, original_start: align_with_fastalign(aligner, src, tgt, original_evidence, original_start) 
+    "Awesome": lambda aligner, src, tgt, original_evidence, original_start, target_language: align_with_awesome(aligner, src, tgt, original_evidence, original_start, target_language),
+    "Levenshtein": lambda aligner, src, tgt, original_evidence, original_start, target_language: align_with_levenshtein(aligner, src, tgt, original_evidence, original_start, target_language),
+    "FastAlign": lambda aligner, src, tgt, original_evidence, original_start, target_language: align_with_fastalign(aligner, src, tgt, original_evidence, original_start, target_language) 
 }
 
-def align_with_fastalign(aligner, src, tgt, original_evidence, original_start):
+def align_with_fastalign(aligner, src, tgt, original_evidence, original_start, target_language):
     #from src.utils import tokenize
     #for par_src, par_tgt in zip(src, tgt):
     #    src_tokens = tokenize(par_src, language="english", warnings = False)[0]
@@ -56,19 +64,19 @@ def align_with_fastalign(aligner, src, tgt, original_evidence, original_start):
     #    PARALLEL_CORPUS += "{} ||| {}\n".format(' '.join(tgt_tokens), ' '.join(src_tokens))
     #return "", -1, {'exact_match': 0.0, 'exact_submatch': 0.0, 'f1': 0.0, 'f1_span': 0.0, 'precision_span': 0.0, 'recall_span': 0.0, 'start_distance': 0.0, 'middle_distance': 0.0, 'end_distance': 0.0}, PARALLEL_CORPUS
     assert len(src) == len(tgt)
-    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, reverse=True, src_language="english", tgt_language="czech")
-    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, reverse=False, src_language="czech", tgt_language="english")
+    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, reverse=True, src_language="english", tgt_language=CODE2LANGUAGE[target_language])
+    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, reverse=False, src_language=CODE2LANGUAGE[target_language], tgt_language="english")
     scores = evaluate_evidence_alignment(prediction_evidence, prediction_start, original_evidence, original_start)
     return new_evidence, new_start, scores
 
-def align_with_awesome(aligner, src, tgt, original_evidence, original_start):
+def align_with_awesome(aligner, src, tgt, original_evidence, original_start, target_language):
     assert len(src) == len(tgt)
-    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, src_language="english", tgt_language="czech")
-    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, src_language="czech", tgt_language="english")
+    new_evidence, new_start = aligner.align_evidence(src, tgt, original_evidence, original_start, src_language="english", tgt_language=CODE2LANGUAGE[target_language])
+    prediction_evidence, prediction_start = aligner.align_evidence(tgt, src, new_evidence, new_start, src_language=CODE2LANGUAGE[target_language], tgt_language="english")
     scores = evaluate_evidence_alignment(prediction_evidence, prediction_start, original_evidence, original_start)
     return new_evidence, new_start, scores
 
-def align_with_levenshtein(aligner, src, tgt, original_evidence, original_start, target_language="cs"): # TODO make the "cs" more general to other languages
+def align_with_levenshtein(aligner, src, tgt, original_evidence, original_start, target_language):
     src = ' '.join(src)
     tgt = ' '.join(tgt)
     if len(tgt) == 0:
@@ -113,7 +121,7 @@ def main(args):
     # load aligner
     aligner = MODELS[args.aligner_name](args.aligner_path)
 
-    output_path = os.path.join(args.output_dir, "{}_{}.json".format(args.dataset_title, args.aligner_name)) # TODO make the output json file more general to other languages
+    output_path = os.path.join(args.output_dir, args.aligner_name, "{}_{}.json".format(args.dataset_title, args.language))
 
     # init scores
     f1s = []
@@ -140,7 +148,7 @@ def main(args):
                         translated_text, translated_answer_start, scores = evidence_cache[ans["answer_start"]][ans["text"]]
                     else:
                         # align evidence
-                        translated_text, translated_answer_start, scores = ALIGN_EVIDENCE[args.aligner_name](aligner, split_paragraph(src_paragraph["context"]), tgt_paragraph["context"], ans["text"], ans["answer_start"])
+                        translated_text, translated_answer_start, scores = ALIGN_EVIDENCE[args.aligner_name](aligner, split_paragraph(src_paragraph["context"]), tgt_paragraph["context"], ans["text"], ans["answer_start"], args.language)
                         # collect scores
                         f1s.append(scores["f1"])
                         ems.append(scores["exact_match"])

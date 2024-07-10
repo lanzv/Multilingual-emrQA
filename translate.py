@@ -10,6 +10,7 @@ from src.translate import translate_dataset
 from src.utils import load_translator_model
 disable_progress_bar()
 import logging
+import time
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -20,12 +21,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, default='./data/data.json')
 parser.add_argument('--output_dir', type=str, default='./data/translations')
 parser.add_argument('--target_language', type=str, default='cs')
+parser.add_argument('--translated_medical_info_message', type=str, default='Na základě lékařských zpráv.')
 parser.add_argument('--translation_model_path', type=str, default='../models/madlad400-3b-mt')
 parser.add_argument('--translation', type=bool, default=False)
 parser.add_argument('--evidence_alignment', type=bool, default=False)
 parser.add_argument('--topics', metavar='N', type=str, nargs='+', default=["medication", "relations"])
 parser.add_argument('--seed', type=int, help='random seed', default=55)
-
 
 
 def main(args):
@@ -34,6 +35,7 @@ def main(args):
         dataset = json.load(f)
 
     if args.translation:
+        dataset_time = time.time()
         # load model + tokenizer
         model, tokenizer = load_translator_model(args.translation_model_path)
 
@@ -50,7 +52,7 @@ def main(args):
 
             # translate
             output_path = os.path.join(args.output_dir, "{}_{}.json".format(title, args.target_language))
-            translated, time_analysis = translate_dataset(model, tokenizer, pars, target_language = args.target_language, translation_mode=True, evidence_detection_mode=False, output_file=output_path)
+            translated, time_analysis = translate_dataset(model, tokenizer, pars, target_language = args.target_language, translation_mode=True, evidence_detection_mode=False, output_file=output_path, translated_medical_info_message=args.translated_medical_info_message)
 
             # log results
             question_times = np.array(time_analysis["questions"])

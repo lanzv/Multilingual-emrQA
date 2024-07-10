@@ -15,15 +15,34 @@ class AwesomeWrapper:
         # find alignments
         src_offset, tgt_offset = 0, 0
         align_words = set()
+        par_src = []
+        par_tgt = []
         for src_text, tgt_text in zip(original_paragraph, translated_paragraph):
-            temp_align_words, src_offset, tgt_offset = self.__find_alignment(src_text, tgt_text, src_offset, tgt_offset, align_layer=align_layer, threshold=threshold, src_language=src_language, tgt_language=tgt_language)
+            temp_align_words, src_offset, tgt_offset, temp_par_src, temp_par_tgt = self.__find_alignment(src_text, tgt_text, src_offset, tgt_offset, align_layer=align_layer, threshold=threshold, src_language=src_language, tgt_language=tgt_language)
             align_words = align_words | temp_align_words
+            par_src = par_src + temp_par_src
+            par_tgt = par_tgt + temp_par_tgt
+
         
         # merge texts to paragraphs
         original_paragraph = ' '.join(original_paragraph)
         translated_paragraph = ' '.join(translated_paragraph)
-        par_src, spans_src = tokenize(original_paragraph, language=src_language)
-        par_tgt, spans_tgt = tokenize(translated_paragraph, language=tgt_language)
+
+        spans_src = []
+        offset = 0
+        for token in par_src:
+            start = original_paragraph.lower().find(token, offset)
+            end = start + len(token)
+            offset = end
+            spans_src.append((start, end))
+
+        spans_tgt = []
+        offset = 0
+        for token in par_tgt:
+            start = translated_paragraph.lower().find(token, offset)
+            end = start + len(token)
+            offset = end
+            spans_tgt.append((start, end))
 
         # find evidence
         start_src_id, end_src_id = None, None
@@ -49,7 +68,15 @@ class AwesomeWrapper:
         #    logging.warning("returning '' evidence with -1 span start, there is no alignment for original evidence '{}' of original paragraph '{}' and translated paragraph '{}'".format(original_evidence, original_paragraph, translated_paragraph))
         #    return "", 0
 
-        new_evidence = translated_paragraph[spans_tgt[start_tgt_id][0]:spans_tgt[end_tgt_id][1]]
+        try:
+            new_evidence = translated_paragraph[spans_tgt[start_tgt_id][0]:spans_tgt[end_tgt_id][1]]
+        except: 
+            logging.info(alignment_exists)
+            logging.info(len(translated_paragraph))
+            logging.info(len(spans_tgt))
+            logging.info(start_tgt_id)
+            logging.info(end_tgt_id)
+            sys.exit()
         new_start = spans_tgt[start_tgt_id][0]
         assert new_evidence == translated_paragraph[new_start:new_start + len(new_evidence)]
         return new_evidence, new_start
@@ -86,4 +113,4 @@ class AwesomeWrapper:
         for i, j in align_subwords:
             align_words.add( (sub2word_map_src[i] + src_offset, sub2word_map_tgt[j] + tgt_offset) )
         
-        return align_words, src_offset + len(par_src), tgt_offset + len(par_tgt)
+        return align_words, src_offset + len(par_src), tgt_offset + len(par_tgt), par_src, par_tgt

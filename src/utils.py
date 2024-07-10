@@ -8,7 +8,14 @@ logging.basicConfig(
 logging.getLogger().setLevel(logging.INFO)
 import re
 from nltk.tokenize import word_tokenize
+import stanza
+from spacy_stanza import StanzaLanguage
 
+
+LANGUAGE2CODE = {
+    "romanian": "ro",
+    "bulgarian": "bg"
+}
 
 
 def load_translator_model(model_path="../models/madlad400-3b-mt"):
@@ -41,14 +48,14 @@ def split_text(text, warnings=True):
             closest_match = min(matches2, key=lambda x: abs(x.start() - middle))
             index = closest_match.start() + 3  # +3 to move past 'a, '
             if warnings:
-                logging.warning("Text '{}' can't be splitted by sentence separator. Splitting by commas.".format(text))
+                logging.warning("Splitting by commas. Text '{}' can't be splitted by sentence separator.".format(text))
         else:
             # If neither pattern is found, split by the nearest space
             spaces = [m.start() for m in re.finditer(r'\s', text)]
             nearest_space = min(spaces, key=lambda x: abs(x - middle))
             index = nearest_space
             if warnings:        
-                logging.warning("Text '{}' can't be splitted by sentence separator. Splitting by spaces.".format(text))
+                logging.warning("Splitting by spaces. Text '{}' can't be splitted by sentence separator.".format(text))
 
 
     # Split the text
@@ -61,7 +68,15 @@ def split_text(text, warnings=True):
 
 def tokenize(paragraph, language="english", warnings = True):
     paragraph = paragraph.lower()
-    tokens = word_tokenize(paragraph, language=language)
+    if language in {"romanian", "bulgarian"}:
+        snlp = stanza.Pipeline(lang=LANGUAGE2CODE[language], processors='tokenize', logging_level="ERROR")
+        nlp = StanzaLanguage(snlp)
+        doc = nlp(paragraph)
+        tokens = []
+        for token in doc:
+            tokens.append(token.text)
+    else:
+        tokens = word_tokenize(paragraph, language=language)
     spans = []
     offset = 0
     for token in tokens:
