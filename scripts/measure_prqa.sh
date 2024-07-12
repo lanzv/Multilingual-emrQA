@@ -1,135 +1,127 @@
 #!/bin/sh
-#SBATCH -J cs_prqa
-#SBATCH -o scripts/slurm_outputs/cs_prqa.out
+#SBATCH -J prqa
+#SBATCH -o scripts/slurm_outputs/prqa.out
 #SBATCH -p cpu-ms
 
-sbatch --job-name=mmedlev \
-     --output=scripts/slurm_outputs/prqa/medication_levenshtein_mbert.out \
-     --partition=gpu-ms \
-     --gpus=1 \
-     --mem-per-gpu=90G \
-     --nodelist=dll-3gpu1 <<"EOF"
-#!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_Levenshtein.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
-EOF
-
-sbatch --job-name=mmedfa \
-     --output=scripts/slurm_outputs/prqa/medication_fastalign_mbert.out \
+sbatch --job-name=bg_m_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/bg_med.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
      --nodelist=dll-3gpu2 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_FastAlign.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/medication_bg.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
 
-sbatch --job-name=mmedaw \
-     --output=scripts/slurm_outputs/prqa/medication_awesome_mbert.out \
+
+sbatch --job-name=bg_r_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/bg_rel.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=90G \
+     --nodelist=dll-3gpu2 <<"EOF"
+#!/bin/bash
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/relations_bg.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
+EOF
+
+
+
+
+
+
+sbatch --job-name=cs_m_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/cs_med.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
      --nodelist=dll-3gpu3 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_Awesome.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/medication_cs.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
 
-sbatch --job-name=cmedlev \
-     --output=scripts/slurm_outputs/prqa/medication_levenshtein_clinicalbert.out \
+
+sbatch --job-name=cs_r_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/cs_rel.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=90G \
+     --nodelist=dll-3gpu3 <<"EOF"
+#!/bin/bash
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/relations_cs.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
+EOF
+
+
+
+
+
+sbatch --job-name=el_m_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/el_med.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
      --nodelist=dll-3gpu4 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_Levenshtein.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.2
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/medication_el.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
 
-sbatch --job-name=cmedfa \
-     --output=scripts/slurm_outputs/prqa/medication_fastalign_clinicalbert.out \
+sbatch --job-name=el_r_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/el_rel.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=90G \
+     --nodelist=dll-3gpu4 <<"EOF"
+#!/bin/bash
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/relations_el.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
+EOF
+
+
+
+
+
+
+sbatch --job-name=pl_m_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/pl_med.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
      --nodelist=dll-3gpu5 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_FastAlign.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.2
-EOF
-
-sbatch --job-name=cmedaw \
-     --output=scripts/slurm_outputs/prqa/medication_awesome_clinicalbert.out \
-     --partition=gpu-ms \
-     --gpus=1 \
-     --mem-per-gpu=90G \
-     --nodelist=dll-3gpu1 <<"EOF"
-#!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/medication_Awesome.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.2
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/medication_pl.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
 
 
-
-
-
-
-
-
-
-
-
-
-sbatch --job-name=mrellev \
-     --output=scripts/slurm_outputs/prqa/relations_levenshtein_mbert.out \
-     --partition=gpu-ms \
-     --gpus=1 \
-     --mem-per-gpu=90G \
-     --nodelist=dll-3gpu2 <<"EOF"
-#!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_Levenshtein.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
-EOF
-
-sbatch --job-name=mrelfa \
-     --output=scripts/slurm_outputs/prqa/relations_fastalign_mbert.out \
-     --partition=gpu-ms \
-     --gpus=1 \
-     --mem-per-gpu=100G \
-     --nodelist=dll-3gpu2 <<"EOF"
-#!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_FastAlign.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
-EOF
-
-sbatch --job-name=mrelaw \
-     --output=scripts/slurm_outputs/prqa/relations_awesome_mbert.out \
-     --partition=gpu-ms \
-     --gpus=1 \
-     --mem-per-gpu=90G \
-     --nodelist=dll-3gpu4 <<"EOF"
-#!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_Awesome.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
-EOF
-
-sbatch --job-name=crellev \
-     --output=scripts/slurm_outputs/prqa/relations_levenshtein_clinicalbert.out \
+sbatch --job-name=pl_r_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/pl_rel.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
      --nodelist=dll-3gpu5 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_Levenshtein.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.05
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/relations_pl.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
 EOF
 
-sbatch --job-name=crelfa \
-     --output=scripts/slurm_outputs/prqa/relations_fastalign_clinicalbert.out \
+
+
+
+
+
+sbatch --job-name=ro_m_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/ro_med.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
-     --nodelist=dll-3gpu1 <<"EOF"
+     --nodelist=dll-4gpu3 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_FastAlign.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.05
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/medication_ro.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
 
-sbatch --job-name=crelaw \
-     --output=scripts/slurm_outputs/prqa/relations_awesome_clinicalbert.out \
+
+sbatch --job-name=ro_r_prqa \
+     --output=scripts/slurm_outputs/prqa/awesome/ro_rel.out \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
-     --nodelist=dll-3gpu4 <<"EOF"
+     --nodelist=dll-4gpu3 <<"EOF"
 #!/bin/bash
-python3 measure_prqa.py --dataset './data/translation_aligners/relations_Awesome.json' --model_name 'ClinicalBERT' --model_path '../models/Bio_ClinicalBERT' --train_sample_ratio 0.05
+python3 measure_prqa.py --dataset './data/translation_aligners/Awesome/relations_ro.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
 EOF

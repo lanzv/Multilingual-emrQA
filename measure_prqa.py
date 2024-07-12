@@ -23,6 +23,8 @@ parser.add_argument('--model_path', type=str, default='../models/Bio_ClinicalBER
 # paragraphizing
 parser.add_argument('--train_sample_ratio', type=float, default=0.2)
 parser.add_argument('--epochs', type=int, default=3)
+parser.add_argument('--to_reports', type=bool, default=False)
+
 # random
 parser.add_argument('--seed', type=int, help='random seed', default=2)
 
@@ -94,7 +96,7 @@ def split_dataset(dataset, train_ratio=0.7, dev_ratio=0.1, f1_span_threshold=80.
             new_report["paragraphs"].append(new_paragraph)
         curr_data["data"].append(new_report)
 
-    logging.info("Using the {} % as f1 span threshold.. {} qas kept, {} qas removed ({} % kept)".format(f1_span_threshold, kept, removed, kept/(kept+removed)))
+    logging.info("Using the {} % as f1 span threshold.. {} qas kept, {} qas removed ({} % kept)".format(f1_span_threshold, kept, removed, 100.0*kept/(kept+removed)))
 
     assert train_ratio + dev_ratio <= 1.0
     note_num = len(curr_data["data"])
@@ -130,6 +132,39 @@ def split_dataset(dataset, train_ratio=0.7, dev_ratio=0.1, f1_span_threshold=80.
     return new_train, dev, test, merged_answers_test
 
 
+def paragraphs2reports(pars):
+    report_data = {"data":[]}
+    for reportid, report in enumerate(pars["data"]):
+        report_context = ' '.join([' '.join(par["context"]) for par in report["paragraphs"]])
+        new_report = {"context": report_context}
+        offset = 0
+        new_qas = []
+        new_answers = {}
+        new_questions = {}
+        for paragraph in report["paragraphs"]:
+            par_start = report_context.find(' '.join(paragraph["context"]), offset)
+            par_end = par_start + len(' '.join(paragraph["context"]))
+            offset = par_end
+            assert report_context[par_start:par_end] == ' '.join(paragraph["context"])
+            for qa in paragraph["qas"]:
+                if len(qa["answers"]) != 0:
+                    if not qa["id"] in new_answers:
+                        new_answers[qa["id"]] = []
+                    new_spans_answers = []
+                    for ans in qa["answers"]:
+                        new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start, "scores": ans["scores"]})
+                        # TODO uncomment it assert new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]
+                    new_answers[qa["id"]] += new_spans_answers
+                    if not qa["id"] in new_questions or len(new_questions[qa["id"]]) < len(qa["question"]):
+                        new_questions[qa["id"]] = qa["question"]
+        for qa_id in new_answers:
+            new_qas.append({"id": qa_id, "question": new_questions[qa_id], "answers": new_answers[qa_id]})
+        new_report["qas"] = new_qas
+        report_data["data"].append({"paragraphs": [new_report], "title": report["title"]})
+    return report_data
+    
+
+
 def main(args):
     if not args.model_name in MODELS:
         logging.error("The model {} is not supported".format(args.model_name))
@@ -138,7 +173,9 @@ def main(args):
     # load splited data
     with open(args.dataset, 'r') as f:
         dataset = json.load(f)
-    
+
+    if args.to_reports:
+        dataset = paragraphs2reports(dataset)
 
     train_pars, dev_pars, test_pars, merged_answers_test = split_dataset(dataset, train_sample_ratio=args.train_sample_ratio)
 
@@ -148,6 +185,7 @@ def main(args):
 
     train_dataset, dev_dataset, test_prqa_dataset = PREPARE_DATASET[args.model_name](train_pars, dev_pars, test_pars)
     logging.info("datasets are converted to Datset format")
+    logging.info("{}|{}".format(len(train_dataset), len(dev_dataset)))
 
     # train model
     model = MODELS[args.model_name](args.model_path)

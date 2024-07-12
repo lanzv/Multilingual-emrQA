@@ -138,9 +138,9 @@ def main(args):
     abs_end_dists = []
     evidence_time = time.time()
     for report_id, (src_report, tgt_report) in enumerate(zip(dataset["data"], translated_dataset["data"])):        
-        evidence_cache = {}
         # translate evidences
         for src_paragraph, tgt_paragraph in zip(src_report["paragraphs"], tgt_report["paragraphs"]):
+            evidence_cache = {}
             for qa in tgt_paragraph["qas"]:
                 new_answers = []
                 for ans in qa["answers"]:
