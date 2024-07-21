@@ -112,3 +112,26 @@ sbatch --job-name=cs_rel \
 #!/bin/bash
 python3 translate.py --translation True --topics "relations" --target_language "cs" --translated_medical_info_message 'Na základě lékařských zpráv.'
 EOF
+
+
+
+
+sbatch --job-name=es_med \
+     --output=scripts/slurm_outputs/translations/es_med.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=50G \
+     --nodelist=dll-3gpu4 <<"EOF"
+#!/bin/bash
+python3 translate.py --translation True --topics "medication" --target_language "es" --translated_medical_info_message 'Basado en informes médicos.#Según los informes médicos.#De acuerdo con los informes médicos.#Con base en los informes médicos.#Fundado en informes médicos.'
+EOF
+
+sbatch --job-name=es_rel \
+     --output=scripts/slurm_outputs/translations/es_rel.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=50G \
+     --nodelist=dll-3gpu5 <<"EOF"
+#!/bin/bash
+python3 translate.py --translation True --topics "relations" --target_language "es" --translated_medical_info_message 'Basado en informes médicos.#Según los informes médicos.#De acuerdo con los informes médicos.#Con base en los informes médicos.#Fundado en informes médicos.'
+EOF

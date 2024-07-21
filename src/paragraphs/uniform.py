@@ -17,7 +17,7 @@ def __split_to_paragraphs_uniformly(data, target_average):
     counts = []
     paragraphs_lengths = []
     for report in data["data"]:
-        report_length = len(report["paragraphs"][0]["norm_context"])
+        report_length = len(report["paragraphs"][0]["context"])
         num_of_paragraphs = max(1, round(float(report_length)/target_average))
         real_average = round(float(report_length)/num_of_paragraphs)
 
@@ -28,7 +28,7 @@ def __split_to_paragraphs_uniformly(data, target_average):
         paragraph_offsets.append(report_length)
 
         # make sure that there are no splited answers between two paragraphs
-        for _ in range(2):
+        for _ in range(10):
             for qa in report["paragraphs"][0]["qas"]:
                 for answer in qa["answers"]:
                     new_paragraph_offsets = paragraph_offsets.copy()
@@ -36,12 +36,14 @@ def __split_to_paragraphs_uniformly(data, target_average):
                         if answer["answer_start"] >= offset and answer["answer_start"] < paragraph_offsets[i+1]:
                             if not answer["answer_start"] + len(answer["text"]) <= paragraph_offsets[i+1]:
                                 new_paragraph_offsets[i+1] = answer["answer_start"] + len(answer["text"])
+                            if len(new_paragraph_offsets) > i+2 and new_paragraph_offsets[i+2] <= new_paragraph_offsets[i+1]:
+                                del new_paragraph_offsets[i+1] 
                     paragraph_offsets = new_paragraph_offsets
 
         # create paragraphs regarding offsets
         report_paragraphs = []
         for i, j in zip(paragraph_offsets[:-1], paragraph_offsets[1:]):
-            report_paragraphs.append(report["paragraphs"][0]["norm_context"][i:j])
+            report_paragraphs.append(report["paragraphs"][0]["context"][i:j])
             paragraphs_lengths.append(len(report_paragraphs[-1]))
         paragraphs.append(report_paragraphs)
         counts.append(len(report_paragraphs))

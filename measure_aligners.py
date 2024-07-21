@@ -40,7 +40,8 @@ CODE2LANGUAGE = {
     "pl": "polish",
     "bg": "bulgarian",
     "ro": "romanian",
-    "el": "greek"
+    "el": "greek", 
+    "es": "spanish"
 }
 
 MODELS = {

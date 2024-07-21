@@ -112,3 +112,25 @@ sbatch --job-name=alcs_rel \
 #!/bin/bash
 python3 measure_aligners.py --language "cs" --dataset_title "relations" --translation_dataset "./data/translations/relations_cs.json" --aligner_name "Awesome" --aligner_path "../models/awesome-align-with-co"
 EOF
+
+
+
+sbatch --job-name=ales_med \
+     --output=scripts/slurm_outputs/alignments/awesome/es_med.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=50G \
+     --nodelist=dll-8gpu1 <<"EOF"
+#!/bin/bash
+python3 measure_aligners.py --language "es" --dataset_title "medication" --translation_dataset "./data/translations/medication_es.json" --aligner_name "Awesome" --aligner_path "../models/awesome-align-with-co"
+EOF
+
+sbatch --job-name=ales_rel \
+     --output=scripts/slurm_outputs/alignments/awesome/es_rel.out \
+     --partition=gpu-ms \
+     --gpus=1 \
+     --mem-per-gpu=50G \
+     --nodelist=dll-8gpu2 <<"EOF"
+#!/bin/bash
+python3 measure_aligners.py --language "es" --dataset_title "relations" --translation_dataset "./data/translations/relations_es.json" --aligner_name "Awesome" --aligner_path "../models/awesome-align-with-co"
+EOF

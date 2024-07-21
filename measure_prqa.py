@@ -16,7 +16,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 parser = argparse.ArgumentParser()
 # dataset paths
-parser.add_argument('--dataset', type=str, default='./data/translation_aligners/medication_Awesome.json')
+parser.add_argument('--dataset', type=str, default='../datasets/emrQA/medication_bg.json')
 # model
 parser.add_argument('--model_name', type=str, default='ClinicalBERT')
 parser.add_argument('--model_path', type=str, default='../models/Bio_ClinicalBERT')
@@ -82,11 +82,11 @@ def split_dataset(dataset, train_ratio=0.7, dev_ratio=0.1, f1_span_threshold=80.
     for report in dataset["data"]:
         new_report = {"title": report["title"], "paragraphs": []}
         for paragraph in report["paragraphs"]:
-            new_paragraph = {"qas": [], "context": " ".join(paragraph["context"])}
+            new_paragraph = {"qas": [], "context": paragraph["context"]}
             for qa in paragraph["qas"]:
                 new_qa = {"question": qa["question"], "id": qa["id"], "answers": []}
                 for ans in qa["answers"]:
-                    if ans["scores"]["f1_span"] >= f1_span_threshold:
+                    if "scores" not in ans or ans["scores"]["f1_span"] >= f1_span_threshold:
                         new_qa["answers"].append({"text": ans["text"], "answer_start": ans["answer_start"]})
                         kept += 1
                     else:
@@ -135,25 +135,31 @@ def split_dataset(dataset, train_ratio=0.7, dev_ratio=0.1, f1_span_threshold=80.
 def paragraphs2reports(pars):
     report_data = {"data":[]}
     for reportid, report in enumerate(pars["data"]):
-        report_context = ' '.join([' '.join(par["context"]) for par in report["paragraphs"]])
+        report_context = ' '.join([par["context"] for par in report["paragraphs"]])
         new_report = {"context": report_context}
         offset = 0
         new_qas = []
         new_answers = {}
         new_questions = {}
         for paragraph in report["paragraphs"]:
-            par_start = report_context.find(' '.join(paragraph["context"]), offset)
-            par_end = par_start + len(' '.join(paragraph["context"]))
+            par_start = report_context.find(paragraph["context"], offset)
+            par_end = par_start + len(paragraph["context"])
             offset = par_end
-            assert report_context[par_start:par_end] == ' '.join(paragraph["context"])
+            assert report_context[par_start:par_end] == paragraph["context"]
             for qa in paragraph["qas"]:
                 if len(qa["answers"]) != 0:
                     if not qa["id"] in new_answers:
                         new_answers[qa["id"]] = []
                     new_spans_answers = []
                     for ans in qa["answers"]:
-                        new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start, "scores": ans["scores"]})
-                        # TODO uncomment it assert new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]
+                        if "scores" in ans:
+                            new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start, "scores": ans["scores"]})
+                        else:
+                            new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start})
+                        if not new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]:
+                            logging.info(new_spans_answers[-1]["text"])
+                            logging.info(report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])])
+                        assert new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]
                     new_answers[qa["id"]] += new_spans_answers
                     if not qa["id"] in new_questions or len(new_questions[qa["id"]]) < len(qa["question"]):
                         new_questions[qa["id"]] = qa["question"]
@@ -162,8 +168,6 @@ def paragraphs2reports(pars):
         new_report["qas"] = new_qas
         report_data["data"].append({"paragraphs": [new_report], "title": report["title"]})
     return report_data
-    
-
 
 def main(args):
     if not args.model_name in MODELS:
@@ -191,6 +195,13 @@ def main(args):
     model = MODELS[args.model_name](args.model_path)
     model.train(train_dataset, dev_dataset, epochs = args.epochs, disable_tqdm=True)
     qa_predictions, pr_predictions, prqa_predictions = model.predict(test_prqa_dataset, disable_tqdm=True)
+    #with open("org_qa_predictions.json", 'w', encoding='utf8') as f:
+    #    json.dump(qa_predictions, f, ensure_ascii=False)
+    #with open("org_pr_predictions.json", 'w', encoding='utf8') as f:
+    #    json.dump(pr_predictions, f, ensure_ascii=False)
+    #with open("org_prqa_predictions.json", 'w', encoding='utf8') as f:
+    #    json.dump(prqa_predictions, f, ensure_ascii=False)
+
     # evaluate
     qa_scores = Evaluate.question_answering(merged_answers_test, qa_predictions)
     logging.info("QA scores: {}".format(qa_scores))

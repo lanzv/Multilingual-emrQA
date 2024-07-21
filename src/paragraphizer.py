@@ -158,3 +158,75 @@ class Paragraphizer:
             paragraphized_data["data"].append(paragraphized_report)
         return paragraphized_data, topics
 
+
+
+
+    def paragraphize2(data, title, frequency_threshold, topics = None, target_average=500):
+        """
+        get data -> paragraphize data ~ split data[i]["paragraphs"] into more paragraphs (right now should be len(data[i]["paragraphs"]) = 1)
+        """
+        if title == "uniform":
+            paragraphs, _ = paragraphize_uniformly(data, frequency_threshold, target_average)
+        else:
+            raise Exception("{} title is not supported".format(title))
+
+
+        
+        paragraphized_data = {"data": []}
+        for report_id, (pars, original_report) in enumerate(zip(paragraphs, data["data"])):
+            norm_context = original_report["paragraphs"][0]["context"]
+            # Init new paragraphized report json
+            paragraphized_report = {"paragraphs": []}
+            par_offsets = [0]
+            normed_pars = []
+            for new_par in pars:
+                normed_pars.append(new_par)
+            for par_id, new_par in enumerate(normed_pars):
+                if par_id == len(pars)-1:
+                    par_mid = 1
+                else:
+                    beg_offset = norm_context.find(normed_pars[par_id+1], (par_offsets[-1] + len(new_par)))
+                    if beg_offset == -1:
+                        logging.error(normed_pars)
+                        logging.error("The paragraph is missing ... paragraph: '{}', offset: '{}', context: '{}'".format(normed_pars[par_id+1], par_offsets[-1] + len(new_par), norm_context))
+                        assert beg_offset != -1
+                    par_mid = beg_offset - (par_offsets[-1] + len(new_par)) # for extra spaces between paragraphs etc..
+                par_offsets.append(par_offsets[-1] + len(new_par) + par_mid)
+                paragraphized_report["paragraphs"].append({"context": new_par, "qas": []})
+
+            # Collect evidences and answer starts
+            for qa in original_report["paragraphs"][0]["qas"]:
+                new_qa_bypars = {}
+                qid = qa["id"]
+                question = qa["question"]
+                for answer in qa["answers"]:
+                    paragraph_found = False
+                    for i, pruned_paragraph in enumerate(paragraphized_report["paragraphs"]):
+                        if par_offsets[i] <= answer["answer_start"] and par_offsets[i+1] > answer["answer_start"]:
+                            if not i in new_qa_bypars:
+                                new_qa_bypars[i] = []
+                            new_answer = {"text": answer["text"], "answer_start": answer["answer_start"]-par_offsets[i]}
+                            new_qa_bypars[i].append(new_answer)
+                            paragraph_found = True
+                            if not pruned_paragraph["context"][new_answer["answer_start"]:new_answer["answer_start"]+len(new_answer["text"])] == new_answer["text"]:
+                                logging.error("The evidence does not match... evidence start: '{}'".format(answer["answer_start"]) +
+                                            ", ith paragraph: '{}'".format(i) + 
+                                            ", ith report: '{}'".format(report_id) +
+                                            ", paragraph: '{}'".format(pruned_paragraph["context"]) + 
+                                            ", new answer: '{}'".format(pruned_paragraph["context"][new_answer["answer_start"]:new_answer["answer_start"]+len(new_answer["text"])]) + 
+                                            ", old answer: '{}'".format(new_answer["text"]))
+                                assert pruned_paragraph["context"][new_answer["answer_start"]:new_answer["answer_start"]+len(new_answer["text"])] == new_answer["text"]
+                            break
+                    assert paragraph_found
+                for par_num in new_qa_bypars:
+                    paragraphized_report["paragraphs"][par_num]["qas"].append({
+                        "id": qid,
+                        "question": question,
+                        "answers": new_qa_bypars[par_num]
+                    })
+
+
+            paragraphized_report["title"] =  original_report["title"]
+            paragraphized_data["data"].append(paragraphized_report)
+        return paragraphized_data, topics
+
