@@ -163,4 +163,5 @@ cython_debug/
 
 /data
 /scripts/slurm_outputs
+/model_output_dir
 *.ipynb
