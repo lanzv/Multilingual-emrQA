@@ -53,7 +53,7 @@ class Evaluate:
                             if not qa_id in correct3_contributed_ids:
                                 correct3 += 1
                                 correct3_contributed_ids.add(qa_id)
-        precision_at1 = correct1/len(all_qas)
-        precision_at2 = correct2/len(all_qas)
-        precision_at3 = correct3/len(all_qas)
+        precision_at1 = 100*(correct1/len(all_qas))
+        precision_at2 = 100*(correct2/len(all_qas))
+        precision_at3 = 100*(correct3/len(all_qas))
         return {"p@1": precision_at1, "p@2": precision_at2, "p@3": precision_at3}

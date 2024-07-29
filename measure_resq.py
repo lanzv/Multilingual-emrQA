@@ -51,6 +51,7 @@ MODELS = {
     "BERTbase": lambda model_path: BERTWrapperPRQA(model_path),
     "mBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "ClinicalBERT": lambda model_path: BERTWrapperPRQA(model_path),
+    "ontotext": lambda model_path: BERTWrapperPRQA(model_path),
 }
 
 
@@ -58,6 +59,7 @@ PREPARE_DATASET = {
     "BERTbase": lambda train_pars, dev_pars, test_pars: get_dataset_bert_format(train_pars, dev_pars, test_pars),
     "mBERT": lambda train_pars, dev_pars, test_pars: get_dataset_bert_format(train_pars, dev_pars, test_pars),
     "ClinicalBERT": lambda train_pars, dev_pars, test_pars: get_dataset_bert_format(train_pars, dev_pars, test_pars),
+    "ontotext": lambda train_pars, dev_pars, test_pars: get_dataset_bert_format(train_pars, dev_pars, test_pars),
 }
 
 
@@ -216,9 +218,9 @@ def merge_datasets(medication, relations, current_path, train_ratio = 0.8):
         else:
             resq_data = load_resq(resq_path)
             train["data"] += resq_data["data"][:-53]
-    train["data"] += med_train["data"][:40] + rel_train["data"][:40]
+    #train["data"] += med_train["data"] + rel_train["data"]
     #dev["data"] += med_dev["data"] + rel_dev["data"]
-    return train, dev
+    return train, dev#, {"data": med_train["data"] + rel_train["data"]}, {"data": med_dev["data"] + rel_dev["data"]}
     #return {"data": med_train["data"] + rel_train["data"]}, {"data": med_dev["data"] + rel_dev["data"]}
 
 
@@ -252,13 +254,14 @@ def main(args):
     scores = {}
     logging.info("------------- Experiment: model {}---------------".format(args.model_name))
     # prepare data
-
+    #emrqa_train_dataset, emrqa_dev_dataset, _ = PREPARE_DATASET[args.model_name](emrqa_train_pars, emrqa_dev_pars, test_pars)
     train_dataset, dev_dataset, test_prqa_dataset = PREPARE_DATASET[args.model_name](train_pars, dev_pars, test_pars)
     logging.info("datasets are converted to Datset format")
     logging.info("{}|{}".format(len(train_dataset), len(dev_dataset)))
 
     # train model
     model = MODELS[args.model_name](args.model_path)
+    #model.train(emrqa_train_dataset, emrqa_dev_dataset, epochs = args.epochs, disable_tqdm=True)
     model.train(train_dataset, dev_dataset, epochs = args.epochs, disable_tqdm=True)
     qa_predictions, pr_predictions, prqa_predictions = model.predict(test_prqa_dataset, disable_tqdm=True)
     # store results

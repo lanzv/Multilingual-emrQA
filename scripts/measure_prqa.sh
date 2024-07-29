@@ -160,10 +160,10 @@ EOF
 
 sbatch --job-name=en_m_prqa \
      --output=scripts/slurm_outputs/prqa/awesome/en_med.out \
-     --partition=gpu-troja \
+     --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
-     --nodelist=tdll-3gpu4 <<"EOF"
+     --nodelist=dll-4gpu4 <<"EOF"
 #!/bin/bash
 python3 measure_prqa.py --dataset '../datasets/emrQA/medication_en.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.2
 EOF
@@ -173,7 +173,7 @@ sbatch --job-name=en_r_prqa \
      --partition=gpu-ms \
      --gpus=1 \
      --mem-per-gpu=90G \
-     --nodelist=dll-4gpu3 <<"EOF"
+     --nodelist=dll-4gpu4 <<"EOF"
 #!/bin/bash
 python3 measure_prqa.py --dataset '../datasets/emrQA/relations_en.json' --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
 EOF
