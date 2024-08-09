@@ -6,8 +6,10 @@
     - Train set: the rest of reports of the given language
  - dataset/annotation mistakes/bugs 
     - duplicated question ids etc..
- - uniform segmentation -> fixing boundaries that none of answer is splited
- - complex answers ~ alternative answers (it is sufficient to find at least one)
+ - uniform segmentation -> fixing boundaries that none of answer evidence is splited
+ - complex answer evidence ~ alternative answer evidence (it is sufficient to find at least one)
+ - questions formulations got from resq form question formulations (not yet natural language questions provided by clinical partners)
+ - PL data including only Ontotext reports - DocMarker reports not included yet
 
 
 |               | BG    | EL    | EN    | PL    | RO    |
@@ -26,7 +28,7 @@
 |**PR-QA F1**  | 80.61 | 83.89 | 64.33 | 58.75 | 74.90 |
 |**PR-QA EM**  | 73.56 | 72.97 | 53.34 | 41.84 | 63.59 |
 
-| Ontotext XLM | BG    | EL    | EN    | PL    | RO    |
+| Ontotext     | BG    | EL    | EN    | PL    | RO    |
 |--------------|-------|-------|-------|-------|-------|
 | Oracle-QA F1 | 85.14 | 85.99 | 71.86 | 64.85 | 75.74 |
 | Oracle-QA EM | 77.90 | 74.98 | 59.96 | 45.89 | 64.25 |
@@ -61,8 +63,12 @@
 |**PR-QA EM**  | 73.01 | 71.67 | 50.84 | 42.96 | 63.02 |
 
 
+ - Results are quite good - F1: 60-84, EM: 45-75
+ - Ontotext model wins in BG, mBERT performs slightly better in the rest of languages
+ - multilingual training helps
 
-## ? Tool bugs ?
+
+## ? Dataset bugs ?
  - empty reports (context ~ None): ***5***
 
 After empty reports filtration:
@@ -114,8 +120,8 @@ duplicated qa["question_id"]s:
 
 ## ? Annotation mistakes ?
 After empty reports filtration:
- - empty answers (answer['text'] ~ None, answer['answer_start'] ~ -1): ***16103***
- - empty asnwer text (len(answer['text']) == 0) but span is there: ***2***
+ - empty answer evidence (len(answer['text']) == 0, answer['answer_start'] ~ -1): ***16103*** (8313 cases of that are qa['enumeration_value_id'] == 'no' situations)
+ - empty asnwer evidence text (len(answer['text']) == 0) but span is there: ***2***
  - empty hospital ids: ***266***
 
 
@@ -154,13 +160,28 @@ qa["question_id"] of empty answers (top):
 
 ## Dataset stats (after mistakes/bugs filtration)
  - number of reports: ***1235***
- - number of questions: ***52809***
- - number of answers: ***77585***
+ - number of questions with completed answers (all data instances): ***52809***
+ - number of answer evidences (all evidence annotations - could be more evidences for one question): ***77585***
  - answer lengths (avg): ***17.27***	(min: 1,	 max: 934)
  - question lengths (avg): ***45.29***	(min: 3,	 max: 165)
 
-|                     | BG    | EL    | EN    | PL    | RO    |
-|---------------------|-------|-------|-------|-------|-------|
-| number of reports   |  283  | 285   | 243   | 132   | 292   |
-| number of questions | 11663 | 14831 | 8357  | 5514  | 12444 |
-| number of answers   | 17217 | 19812 | 11581 | 10763 | 18212 |
+|                                          | BG    | EL    | EN    | PL    | RO    |
+|------------------------------------------|-------|-------|-------|-------|-------|
+| number of reports                        |  283  | 285   | 243   | 132   | 292   |
+| number of questions (all data instances) | 11663 | 14831 | 8357  | 5514  | 12444 |
+| number of answer evidences               | 17217 | 19812 | 11581 | 10763 | 18212 |
+
+
+Answer evidence position frequencies in reports for BG
+```
+ 0- 10% | ***********
+10- 20% | ***********
+20- 30% | ***
+30- 40% | **
+40- 50% | *
+50- 60% | **
+60- 70% | *
+70- 80% | **
+80- 90% | ***
+90-100% | *********
+```
