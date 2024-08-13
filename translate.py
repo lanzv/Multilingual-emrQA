@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_path', type=str, default='./data/data.json')
 parser.add_argument('--output_dir', type=str, default='./data/translations')
 parser.add_argument('--target_language', type=str, default='cs')
+parser.add_argument('--disable_prompting', type=bool, default=False)
 parser.add_argument('--translated_medical_info_message', type=str, default='Na základě lékařských zpráv.')
 parser.add_argument('--translation_model_path', type=str, default='../models/madlad400-3b-mt')
 parser.add_argument('--translation', type=bool, default=False)
@@ -51,8 +52,11 @@ def main(args):
             pars, topics = Paragraphizer.paragraphize(data = curr_data, title=title, frequency_threshold = 0)
 
             # translate
-            output_path = os.path.join(args.output_dir, "{}_{}.json".format(title, args.target_language))
-            translated, time_analysis = translate_dataset(model, tokenizer, pars, target_language = args.target_language, translation_mode=True, evidence_detection_mode=False, output_file=output_path, translated_medical_info_message=args.translated_medical_info_message)
+            if args.disable_prompting:
+                output_path = os.path.join(args.output_dir, "noprompt_{}_{}.json".format(title, args.target_language))
+            else:
+                output_path = os.path.join(args.output_dir, "{}_{}.json".format(title, args.target_language))
+            translated, time_analysis = translate_dataset(model, tokenizer, pars, target_language = args.target_language, translation_mode=True, evidence_detection_mode=False, output_file=output_path, translated_medical_info_message=args.translated_medical_info_message, disable_prompting=args.disable_prompting)
 
             # log results
             question_times = np.array(time_analysis["questions"])
