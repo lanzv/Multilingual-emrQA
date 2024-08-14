@@ -87,6 +87,45 @@ Average table contains LINDAT averaged over only four languages (CS, DE, FR, PL)
 
 ## Evidence Alignment
 
+When Prompting the translation (using medical message) some of paragraphs needed to be translated via DeepL / Google Translator
+
+
+|  Medication                           |          |
+|---------------------------------------|----------|
+| overall paragraph parts               | 6 268    | 
+| overall paragraphs                    | 5 081    |
+| number of answers                     | 254 875  |
+| number of questions                   | 232 347  |
+
+
+|  Medication                           | BG         | CS       | ES       | PL       | RO         |
+|---------------------------------------|------------|----------|----------|----------|------------|
+| paragraph parts translated "manually" | 4 (0.06%)  | 1 (0.02%)| 0 (0.00%)| 3 (0.05%)| 3 (0.05%)  |
+| paragraphs translated "manually"      | 4 (0.08%)  | 1 (0.02%)| 0 (0.00%)| 3 (0.06%)| 3 (0.06%)  |
+| answers in affected paragraphs        | 789 (0.31%)| 0 (0.00%)| 0 (0.00%)| 0 (0.00%)| 471 (0.18%)|
+| questions in affected paragraphs      | 704 (0.30%)| 0 (0.00%)| 0 (0.00%)| 0 (0.00%)| 407 (0.18%)|
+| answers in affected parts             | 245 (0.10%)| 0 (0.00%)| 0 (0.00%)| 0 (0.00%)| 5 (0.00%)  |
+| questions in affected parts           | 222 (0.10%)| 0 (0.00%)| 0 (0.00%)| 0 (0.00%)| 5 (0.00%)  |
+
+
+|  Relations                            |            |
+|---------------------------------------|------------|
+| overall paragraph parts               | 11 054     | 
+| overall paragraphs                    | 9 482      |
+| number of answers                     | 1 021 514  |
+| number of questions                   | 987 965    |
+
+|  Relations                            | BG         | CS         | ES       | PL          | RO         |
+|---------------------------------------|------------|------------|----------|-------------|------------|
+| paragraph parts translated "manually" | 2 (0.02%)  | 6 (0.05%)  | 0 (0.00%)| 4 (0.04%)   | 1 (0.01%)  |
+| paragraphs translated "manually"      | 2 (0.02%)  | 6 (0.06%)  | 0 (0.00%)| 4 (0.04%)   | 1 (0.01%)  |
+| answers in affected paragraphs        | 547 (0.05%)| 445 (0.04%)| 0 (0.00%)| 1036 (0.10%)| 0 (0.00%)  |
+| questions in affected paragraphs      | 547 (0.06%)| 445 (0.05%)| 0 (0.00%)| 1020 (0.10%)| 0 (0.00%)  |
+| answers in affected parts             | 324 (0.03%)| 222 (0.02%)| 0 (0.00%)| 565 (0.06%) | 0 (0.00%)  |
+| questions in affected parts           | 324 (0.03%)| 222 (0.02%)| 0 (0.00%)| 549 (0.06%) | 0 (0.00%)  |
+
+
+
 ### Medication
 
 |  Awesome        | BG       | CS       | EL       | ES       | PL       | RO       |
