@@ -6,8 +6,8 @@
 
 sbatch --job-name=bg_fa_train \
      --output=scripts/slurm_outputs/nllb/bg_fa_train.out \
-     --partition=cpu-ms \
-     --mem-per-cpu=50G <<"EOF"
+     --partition=gpu-troja \
+     --mem-per-cpu=90G <<"EOF"
 #!/bin/bash
 cd ../models/fast_align/build/
 ./fast_align -i ../../../datasets/nllb/bgen_nllb.txt -d -v -o -p bgen/fwd_params >bgen/fwd_align 2>bgen/fwd_err
@@ -68,7 +68,7 @@ EOF
 
 sbatch --job-name=ro_fa_train \
      --output=scripts/slurm_outputs/nllb/ro_fa_train.out \
-     --partition=cpu-ms \
+     --partition=gpu-troja \
      --mem-per-cpu=90G <<"EOF"
 #!/bin/bash
 
