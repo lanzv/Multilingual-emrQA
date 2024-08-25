@@ -165,5 +165,3 @@ cython_debug/
 /scripts/slurm_outputs
 /model_output_dir
 *.ipynb
-
-generate_markdown_table.py

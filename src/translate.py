@@ -72,8 +72,8 @@ def translate_paragraph(model, tokenizer, text, target_language = "cs", no_repea
         translation = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
         spaces += "     "
         if len(spaces) >= 200:
-            logging.warning("The medical info message '{}' cannot be found in \n'{}'\n of the original \n'{}'\n or the length of the translated is too small. Returning original paragraph as untranslatable.".format(translated_medical_info_message, translation, text))
-            return [text]
+            logging.warning("The medical info message '{}' cannot be found in \n'{}'\n of the original \n'{}'\n or the length of the translated is too small. Returning translation without prompting.".format(translated_medical_info_message, translation, text))
+            return translate_paragraph(model, tokenizer, text, target_language, no_repeat_ngram_size, translated_medical_info_message, text_length_limit, disable_prompting=True)
 
     for message in translated_medical_info_message.split("#"):
         if message == translation[-len(message):]:

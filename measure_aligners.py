@@ -150,31 +150,31 @@ def main(args):
                     else:
                         # align evidence
                         translated_text, translated_answer_start, scores = ALIGN_EVIDENCE[args.aligner_name](aligner, split_paragraph(src_paragraph["context"]), tgt_paragraph["context"], ans["text"], ans["answer_start"], args.language)
-                        # collect scores
-                        f1s.append(scores["f1"])
-                        ems.append(scores["exact_match"])
-                        esms.append(scores["exact_submatch"])
-                        f1s_span.append(scores["f1_span"])
-                        ps_span.append(scores["precision_span"])
-                        rs_span.append(scores["recall_span"])
-                        str_dists.append(scores["start_distance"])
-                        mid_dists.append(scores["middle_distance"])
-                        end_dists.append(scores["end_distance"])
-                        abs_str_dists.append(scores["absolute_start_distance"])
-                        abs_mid_dists.append(scores["absolute_middle_distance"])
-                        abs_end_dists.append(scores["absolute_end_distance"])
                         # add to cache
                         if not ans["answer_start"] in evidence_cache:
                             evidence_cache[ans["answer_start"]] = {}
                         evidence_cache[ans["answer_start"]][ans["text"]] = (translated_text, translated_answer_start, scores)
                     new_answers.append({"text": translated_text, "answer_start": translated_answer_start, "scores": scores})
+                    # collect scores
+                    f1s.append(scores["f1"])
+                    ems.append(scores["exact_match"])
+                    esms.append(scores["exact_submatch"])
+                    f1s_span.append(scores["f1_span"])
+                    ps_span.append(scores["precision_span"])
+                    rs_span.append(scores["recall_span"])
+                    str_dists.append(scores["start_distance"])
+                    mid_dists.append(scores["middle_distance"])
+                    end_dists.append(scores["end_distance"])
+                    abs_str_dists.append(scores["absolute_start_distance"])
+                    abs_mid_dists.append(scores["absolute_middle_distance"])
+                    abs_end_dists.append(scores["absolute_end_distance"])
                 # rewrite answers to translated aligned ones
                 qa["answers"] = new_answers
         logging.info("{}. evidences measured - em: {} f1 span: {}".format(report_id, np.mean(ems), np.mean(f1s_span)))
 
-        # store results
-        with open(output_path, 'w', encoding='utf8') as f:
-            json.dump(translated_dataset, f, ensure_ascii=False)
+    # store results
+    with open(output_path, 'w', encoding='utf8') as f:
+        json.dump(translated_dataset, f, ensure_ascii=False)
     
 
     final_score = {
