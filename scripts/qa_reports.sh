@@ -207,7 +207,7 @@ sbatch --job-name=elrqa \
      --output=scripts/slurm_outputs/qa/full_reports/mbert_el_rel_1.out \
      --partition=gpu-ms \
      --gpus=1 \
-     --mem-per-gpu=90G \
+     --mem-per-gpu=120G \
      --exclude=dll-4gpu1,dll-4gpu2,dll-8gpu1,dll-8gpu2,tdll-8gpu3,tdll-8gpu4,tdll-8gpu5,tdll-8gpu6,tdll-8gpu7,dll-8gpu3,dll-8gpu4,dll-8gpu5,dll-8gpu6,dll-10gpu1,dll-10gpu2,dll-10gpu3 <<"EOF"
 #!/bin/bash
 python3 measure_qa.py --seed 1 --dataset './data/translation_aligners/FastAlign/relations_el.json' --epochs 3 --to_reports True --paragraph_parts True --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05
@@ -225,7 +225,7 @@ sbatch --job-name=elrqa \
      --output=scripts/slurm_outputs/qa/full_reports/mbert_el_rel_3.out \
      --partition=gpu-ms \
      --gpus=1 \
-     --mem-per-gpu=90G \
+     --mem-per-gpu=120G \
      --exclude=dll-4gpu1,dll-4gpu2,dll-8gpu1,dll-8gpu2,tdll-8gpu3,tdll-8gpu4,tdll-8gpu5,tdll-8gpu6,tdll-8gpu7,dll-8gpu3,dll-8gpu4,dll-8gpu5,dll-8gpu6,dll-10gpu1,dll-10gpu2,dll-10gpu3 <<"EOF"
 #!/bin/bash
 python3 measure_qa.py --seed 3 --dataset './data/translation_aligners/FastAlign/relations_el.json' --epochs 3 --to_reports True --paragraph_parts True --model_name 'mBERT' --model_path '../models/bert-base-multilingual-cased' --train_sample_ratio 0.05

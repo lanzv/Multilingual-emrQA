@@ -131,12 +131,24 @@ class BERTWrapperPRQA:
         # Tokenize our examples with truncation and padding, but keep the overflows using a stride. This results
         # in one example possible giving several features when a context is long, each of those features having a
         # context that overlaps a bit the context of the previous feature.
-        tokenized_examples = self.tokenizer(
+        try: 
+            tokenized_examples = self.tokenizer(
+                examples["question"],
+                examples["context"],
+                truncation="only_second",
+                max_length=384,
+                stride=128, #doc_stride
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+                padding="max_length",
+            )
+        except:
+            tokenized_examples = self.tokenizer(
             examples["question"],
             examples["context"],
             truncation="only_second",
             max_length=384,
-            stride=128, #doc_stride
+            stride=110, #doc_stride
             return_overflowing_tokens=True,
             return_offsets_mapping=True,
             padding="max_length",
@@ -230,7 +242,7 @@ class BERTWrapperPRQA:
                 examples["context"],
                 truncation="only_second",
                 max_length=384,
-                stride=126, #doc_stride
+                stride=110, #doc_stride
                 return_overflowing_tokens=True,
                 return_offsets_mapping=True,
                 padding="max_length",

@@ -38,6 +38,7 @@ MODELS = {
     "BERTbase": lambda model_path: BERTWrapperPRQA(model_path),
     "mBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "ClinicalBERT": lambda model_path: BERTWrapperPRQA(model_path),
+    "XLMRLarge": lambda model_path: BERTWrapperPRQA(model_path),
 }
 
 
@@ -45,6 +46,7 @@ PREPARE_DATASET = {
     "BERTbase": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "mBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "ClinicalBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
+    "XLMRLarge": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
 }
 
 DATSET_FILTERS = {
