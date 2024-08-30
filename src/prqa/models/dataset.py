@@ -6,12 +6,12 @@ from dataclasses import dataclass, field
 from textwrap import dedent
 from types import SimpleNamespace
 from typing import Optional
-
+import logging
 import yaml
 from datasets import DatasetDict, load_dataset
 
 
-def emrqa2qa_dataset(dataset, seed=54, balanced=True):
+def emrqa2qa_dataset(dataset, seed=54):
     data = {
         'id': [],
         'title': [],
@@ -20,10 +20,7 @@ def emrqa2qa_dataset(dataset, seed=54, balanced=True):
         'answers': []
     }
     random.seed(seed)
-    always_one_paragraph = True
     for report in dataset["data"]:
-        if len(report["paragraphs"]) > 1:
-            always_one_paragraph = False
         for paragraph_id, paragraph in enumerate(report['paragraphs']):
             for qa in paragraph['qas']:
                 if len(qa["answers"]) > 0:
@@ -34,101 +31,92 @@ def emrqa2qa_dataset(dataset, seed=54, balanced=True):
                     texts = [ans['text'] for ans in qa['answers']]
                     starts = [ans['answer_start'] for ans in qa['answers']]
                     data['answers'].append({'text': texts, 'answer_start': starts})
-    if always_one_paragraph:
-        balanced = False
-    if balanced:
-        for report in dataset["data"]:
-            # precompute negative paragraphs by used questions
-            correct_paragraphs_by_questions = {}
-            for par_id, paragraph in enumerate(report["paragraphs"]):
-                for qa in paragraph["qas"]:
-                    if not qa["id"] in correct_paragraphs_by_questions:
-                        correct_paragraphs_by_questions[qa["id"]] = set()
-                    correct_paragraphs_by_questions[qa["id"]].add(par_id)
-            paragraphs_by_questions = {}
-            for qa_id in correct_paragraphs_by_questions:
-                paragraphs_by_questions[qa_id] = []
-                for par_id, paragraph in enumerate(report["paragraphs"]):
-                    if not par_id in correct_paragraphs_by_questions[qa_id]:
-                        paragraphs_by_questions[qa_id].append(paragraph["context"])
-            # create negative samples
-            for paragraph in report["paragraphs"]:
-                for qa in paragraph["qas"]:
-                    if len(paragraphs_by_questions[qa["id"]]) > 0:
-                        data['id'].append(str(uuid.uuid1().hex)) # set new id for negative sample
-                        data['title'].append(report['title'])                            
-                        data['context'].append(random.choice(paragraphs_by_questions[qa["id"]]))
-                        data['question'].append(qa['question'])
-                        data['answers'].append({'text': [], 'answer_start': []})
 
     dataset = Dataset.from_dict(data)
     dataset = dataset.shuffle(seed=seed)
     return dataset
 
 
-def emrqa2prqa_dataset(dataset, seed=54):
-    report_boundaries = [0]
-    question_ids = []
-    gold_paragraphs = [] # list of sets of gold paragraphs
+def get_dataset_bert_format(train, dev, test, seed):
+    train_dataset = emrqa2qa_dataset(train, seed)
+    dev_dataset = emrqa2qa_dataset(dev, seed)
+    test_dataset = emrqa2qa_dataset(test, seed)
+    return train_dataset, dev_dataset, test_dataset
 
-    data = {
-        'id': [],
-        'title': [],
-        'context': [],
-        'question': [],
-        'answers': []
-    }
-    random.seed(seed)
-    for report in dataset["data"]:
-        report_qa_ids = set()
-        map_id2question = {}
-        # precompute all paragraphs and their question ids
-        ids_by_paragraphs = {}
-        for par_id, paragraph in enumerate(report["paragraphs"]):
-            ids_by_paragraphs[par_id] = set()
+
+
+
+
+
+def paragraphs2reports(pars):
+    report_data = {"data":[]}
+    for reportid, report in enumerate(pars["data"]):
+        report_context = ' '.join([par["context"] for par in report["paragraphs"]])
+        new_report = {"context": report_context}
+        offset = 0
+        new_qas = []
+        new_answers = {}
+        new_questions = {}
+        for paragraph in report["paragraphs"]:
+            par_start = report_context.find(paragraph["context"], offset)
+            par_end = par_start + len(paragraph["context"])
+            offset = par_end
+            assert report_context[par_start:par_end] == paragraph["context"]
             for qa in paragraph["qas"]:
-                map_id2question[qa["id"]] = qa["question"]
-                ids_by_paragraphs[par_id].add(qa["id"])
-                report_qa_ids.add(qa["id"])
-
-        # create the dataset
-        for qa_id in report_qa_ids:
-            gold_report_paragraphs = set()
-            question_ids.append(qa_id)
-            for par_id, paragraph in enumerate(report["paragraphs"]):
-                data['id'].append("{}_{}".format(qa_id, par_id))
-                data['title'].append(report['title'])
-                if len(data['context']) < 20:
-                    data['context'].append(paragraph['context'] + paragraph['context'])
-                else:
-                    data['context'].append(paragraph['context'])
-                data['question'].append(map_id2question[qa_id])
-                if qa_id in ids_by_paragraphs[par_id]:
-                    gold_report_paragraphs.add(par_id)
-                    answer_found = False
-                    for qa in paragraph["qas"]:
-                        if qa["id"] == qa_id:
-                            texts = [ans['text'] for ans in qa['answers']]
-                            starts = [ans['answer_start'] for ans in qa['answers']]
-                            answer_found = True
-                            break
-                    assert answer_found
-                else:
-                    texts = []
-                    starts = []
-                data['answers'].append({'text': texts, 'answer_start': starts})
-
-            report_boundaries.append(report_boundaries[-1] + len(report["paragraphs"]))
-            gold_paragraphs.append(gold_report_paragraphs)
+                if len(qa["answers"]) != 0:
+                    if not qa["id"] in new_answers:
+                        new_answers[qa["id"]] = []
+                    new_spans_answers = []
+                    for ans in qa["answers"]:
+                        if "scores" in ans:
+                            new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start, "scores": ans["scores"]})
+                        else:
+                            new_spans_answers.append({"text": ans["text"], "answer_start": ans["answer_start"] + par_start})
+                        if not new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]:
+                            logging.info(new_spans_answers[-1]["text"])
+                            logging.info(report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])])
+                        assert new_spans_answers[-1]["text"] == report_context[new_spans_answers[-1]["answer_start"]:new_spans_answers[-1]["answer_start"] + len(new_spans_answers[-1]["text"])]
+                    new_answers[qa["id"]] += new_spans_answers
+                    if not qa["id"] in new_questions or len(new_questions[qa["id"]]) < len(qa["question"]):
+                        new_questions[qa["id"]] = qa["question"]
+        for qa_id in new_answers:
+            new_qas.append({"id": qa_id, "question": new_questions[qa_id], "answers": new_answers[qa_id]})
+        new_report["qas"] = new_qas
+        report_data["data"].append({"paragraphs": [new_report], "title": report["title"]})
+    return report_data
 
 
-    test_data = Dataset.from_dict(data)
-    return {"test_data": test_data, "report_boundaries": report_boundaries, "question_ids": question_ids, "gold_paragraphs": gold_paragraphs}
 
+def filter_dataset(dataset, filters = {"f1_span": 80.0}):
+    """
+    """
+    curr_data = {"data": []}
+    kept = 0
+    removed = 0
+    for report in dataset["data"]:
+        new_report = {"title": report["title"], "paragraphs": []}
+        for paragraph in report["paragraphs"]:
+            new_paragraph = {"qas": [], "context": paragraph["context"]}
+            for qa in paragraph["qas"]:
+                new_qa = {"question": qa["question"], "id": qa["id"], "answers": []}
+                for ans in qa["answers"]:
+                    if "scores" in ans:
+                        to_remove = False
+                        for metric in filters:
+                            if ans["scores"][metric] < filters[metric]:
+                                to_remove = True
+                        if to_remove: 
+                            removed += 1
+                        else:
+                            new_qa["answers"].append({"text": ans["text"], "answer_start": ans["answer_start"]})
+                            kept += 1
+                    else:
+                        new_qa["answers"].append({"text": ans["text"], "answer_start": ans["answer_start"]})
+                        kept += 1
+                if len(new_qa["answers"]) > 0:
+                    new_paragraph["qas"].append(new_qa)
+            new_report["paragraphs"].append(new_paragraph)
+        curr_data["data"].append(new_report)
 
-def get_dataset_bert_format(train, dev, test):
-    train_dataset = emrqa2qa_dataset(train)
-    dev_dataset = emrqa2qa_dataset(dev)
-    test_prqa_dataset = emrqa2prqa_dataset(test)
-    return train_dataset, dev_dataset, test_prqa_dataset
-
+    logging.info("Using the {} filtration settings: {} qas kept, {} qas removed ({} % kept)".format(filters, kept, removed, 100.0*kept/(kept+removed)))
+    return curr_data, kept, removed

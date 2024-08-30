@@ -6,13 +6,12 @@ from tqdm.auto import tqdm
 import numpy as np
 import collections
 import random
-import evaluate as eval_lib
 import matplotlib.pyplot as plt
 import re
 import json
 import logging
 from torch.nn.functional import softmax
-
+import evaluate
 
 class BERTWrapperPRQA:
     def __init__(self, model_name):
@@ -39,8 +38,8 @@ class BERTWrapperPRQA:
     
     def train(self, train_data, dev_data, learning_rate=3e-5, epochs=1, weight_decay=0.01, train_batch_size=16, eval_batch_size=256, seed=54, disable_tqdm=False):
         tokenized_train = train_data.map(self.__preprocess_function, batched=True, remove_columns=train_data.column_names)
-        tokenized_dev = dev_data.map(self.__preprocess_function, batched=True, remove_columns=train_data.column_names) 
-        
+        tokenized_dev = dev_data.map(self.__preprocess_function, batched=True, remove_columns=train_data.column_names)
+        metric = evaluate.load("squad")
         logging.info("training data are prepared")
         training_args = TrainingArguments(
             save_strategy="no",
@@ -54,6 +53,45 @@ class BERTWrapperPRQA:
             push_to_hub=True,
             disable_tqdm=disable_tqdm
         )
+
+        def compute_metrics(p):
+            start_predictions, end_predictions = p.predictions
+            starts, ends = p.label_ids
+            start_predictions, end_predictions, starts, ends = np.array(start_predictions), np.array(end_predictions), np.array(starts), np.array(ends)
+            valid_mask = (starts != 0) | (ends != 0)
+
+            filtered_start_predictions = start_predictions[valid_mask]
+            filtered_end_predictions = end_predictions[valid_mask]
+            filtered_starts = starts[valid_mask]
+            filtered_ends = ends[valid_mask]
+            logging.info("{}|{}|{}|{}".format(len(filtered_start_predictions), len(filtered_end_predictions), len(filtered_starts), len(filtered_ends)))
+
+            predicted_starts = np.argmax(filtered_start_predictions, axis=1)
+            predicted_ends = np.argmax(filtered_end_predictions, axis=1)
+
+            exact_matches = (predicted_starts == filtered_starts) & (predicted_ends == filtered_ends)
+            exact_match_score = np.mean(exact_matches)
+
+            def compute_f1_span(true_starts, true_ends, pred_starts, pred_ends):
+                f1_scores = []
+                for true_start, true_end, pred_start, pred_end in zip(true_starts, true_ends, pred_starts, pred_ends):
+                    true_span = set(range(true_start, true_end + 1))
+                    pred_span = set(range(pred_start, pred_end + 1))
+                    intersection = len(true_span & pred_span)
+                    if intersection == 0:
+                        f1_scores.append(0.0)
+                    else:
+                        precision = intersection / len(pred_span)
+                        recall = intersection / len(true_span)
+                        f1 = 2 * precision * recall / (precision + recall)
+                        f1_scores.append(f1)
+                return np.mean(f1_scores)
+
+            f1_score = compute_f1_span(filtered_starts, filtered_ends, predicted_starts, predicted_ends)
+            validation_scores = {"exact match": 100.0*exact_match_score, "f1 span": 100.0*f1_score}
+            logging.info(validation_scores)
+            return validation_scores
+
         self.trainer = Trainer(
             model=self.model,
             args=training_args,
@@ -61,17 +99,13 @@ class BERTWrapperPRQA:
             eval_dataset=tokenized_dev,
             tokenizer=self.tokenizer,
             data_collator=self.data_collator,
+            compute_metrics=compute_metrics,
         )
 
         self.trainer.train()
         logging.info("the model is trained")
 
-    def predict(self,  test_prqa_dataset, seed=54, disable_tqdm=False, confidence_type="min_cls"):
-        test_dataset = test_prqa_dataset["test_data"]
-        report_boundaries = test_prqa_dataset["report_boundaries"] 
-        question_ids = test_prqa_dataset["question_ids"] 
-        gold_paragraphs = test_prqa_dataset["gold_paragraphs"]
-
+    def predict(self, test_dataset, seed=54, disable_tqdm=False):
         # prepare validation features and do the prediction
         validation_features = test_dataset.map(
             self.__prepare_validation_features,
@@ -83,28 +117,9 @@ class BERTWrapperPRQA:
         #raw_predictions = self.trainer.prediction_loop(test_loader, description="prediction")
         raw_predictions = self.trainer.predict(validation_features)
         validation_features.set_format(type=validation_features.format["type"], columns=list(validation_features.features.keys()))
-        predictions, confidences = self.__postprocess_qa_predictions(test_dataset, validation_features, raw_predictions.predictions, disable_tqdm=disable_tqdm, confidence_type=confidence_type)
+        qa_predictions = self.__postprocess_qa_predictions(test_dataset, validation_features, raw_predictions.predictions, disable_tqdm=disable_tqdm)
 
-
-        # choose the argmax for questions i...j regarding report_boundaries
-        pr_predictions = {}
-        prqa_predictions = {}
-        qa_predictions = {}
-        for k, (i, j) in enumerate(zip(report_boundaries[:-1], report_boundaries[1:])):
-            paragraph_predictions = confidences[i:j]
-            # PR
-            pr_predictions[question_ids[k]] = np.argsort(paragraph_predictions, axis=0)[::-1]
-            # PRQA
-            top_paragraph = pr_predictions[question_ids[k]][0]
-            prqa_predictions[question_ids[k]] = predictions["{}_{}".format(question_ids[k], top_paragraph)]
-            # QA
-            for par_id in pr_predictions[question_ids[k]]:
-                if par_id in gold_paragraphs[k]:
-                    # take the most confident gold paragraph (in case there are more of gold paragraphs)
-                    qa_predictions[question_ids[k]] = predictions["{}_{}".format(question_ids[k], par_id)]
-                    break
-        
-        return qa_predictions, pr_predictions, prqa_predictions
+        return qa_predictions
 
 
     def __preprocess_function(self, examples):
@@ -249,7 +264,7 @@ class BERTWrapperPRQA:
 
 
     
-    def __postprocess_qa_predictions(self, examples, features, raw_predictions, disable_tqdm=False, confidence_type="min_cls"):
+    def __postprocess_qa_predictions(self, examples, features, raw_predictions, disable_tqdm=False):
         """
         Authors: Huggingface
         """
@@ -315,12 +330,5 @@ class BERTWrapperPRQA:
                     
             text = context[start_char: end_char]          
             predictions[example["id"]] = text
-            if confidence_type == "max_score":
-                confidences.append(max_score)
-            elif confidence_type == "min_cls":
-                confidences.append(-cls_score)
-            else:
-                logging.warn("We don't support confidence type '{}'".format(confidence_type))
-                confidences.append(0.0)
 
-        return predictions, confidences
+        return predictions

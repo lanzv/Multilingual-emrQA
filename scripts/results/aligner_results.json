@@ -770,6 +770,102 @@
                 }
             }
         },
+        "el": {
+            "medication": {
+                "Levenshtein": {
+                    "f1": 72.2338395076159,
+                    "exact_match": 11.609220205983325,
+                    "exact_submatch": 56.5806768023541,
+                    "f1_span": 68.93655150399685,
+                    "precision_span": 63.972789838081425,
+                    "recall_span": 80.97498045600126,
+                    "start_distance": -16.95921922511035,
+                    "middle_distance": -4.492288376655223,
+                    "end_distance": 7.974642471799902,
+                    "absolute_start_distance": 64.26037469347719,
+                    "absolute_middle_distance": 57.38104168710152,
+                    "absolute_end_distance": 59.50717410495341,
+                    "overall_time": 14152.586613178253
+                },
+                "FastAlign": {
+                    "f1": 87.85866890872735,
+                    "exact_match": 41.85267287886219,
+                    "exact_submatch": 70.7417361451692,
+                    "f1_span": 87.18395733782108,
+                    "precision_span": 87.1284850441225,
+                    "recall_span": 92.98340007481524,
+                    "start_distance": -4.512886709171163,
+                    "middle_distance": 2.805771456596371,
+                    "end_distance": 10.124429622363904,
+                    "absolute_start_distance": 13.674303089749877,
+                    "absolute_middle_distance": 11.215081902893575,
+                    "absolute_end_distance": 13.168682687591957,
+                    "overall_time": 94.71759867668152
+                },
+                "Awesome": {
+                    "f1": 76.20113535861279,
+                    "exact_match": 36.52182442373713,
+                    "exact_submatch": 85.45836194212849,
+                    "f1_span": 75.70570212363349,
+                    "precision_span": 70.01733269969408,
+                    "recall_span": 96.76359384641619,
+                    "start_distance": -29.8275232957332,
+                    "middle_distance": -0.3403472290338401,
+                    "end_distance": 29.146828837665524,
+                    "absolute_start_distance": 32.92477488965179,
+                    "absolute_middle_distance": 21.21467778322707,
+                    "absolute_end_distance": 30.806709171162336,
+                    "overall_time": 41433.16449189186
+                }
+            },
+            "relations": {
+                "Levenshtein": {
+                    "f1": 80.60697987624714,
+                    "exact_match": 23.648623513725706,
+                    "exact_submatch": 75.99690263667458,
+                    "f1_span": 78.08434758343789,
+                    "precision_span": 71.34032480423588,
+                    "recall_span": 90.0280003510943,
+                    "start_distance": -17.730161309585576,
+                    "middle_distance": -4.272275759314116,
+                    "end_distance": 9.185609790957344,
+                    "absolute_start_distance": 43.209095519004144,
+                    "absolute_middle_distance": 34.75255405212263,
+                    "absolute_end_distance": 34.04917896377338,
+                    "overall_time": 16112.923529624939
+                },
+                "FastAlign": {
+                    "f1": 92.06087821238314,
+                    "exact_match": 60.61238514596961,
+                    "exact_submatch": 78.46265445211715,
+                    "f1_span": 91.6475550694133,
+                    "precision_span": 91.4728114713601,
+                    "recall_span": 95.56339669897199,
+                    "start_distance": -3.5792617624428056,
+                    "middle_distance": 1.9183897626464248,
+                    "end_distance": 7.416041287735655,
+                    "absolute_start_distance": 10.308743688290127,
+                    "absolute_middle_distance": 8.771977672356913,
+                    "absolute_end_distance": 10.061199357032796,
+                    "overall_time": 148.8974950313568
+                },
+                "Awesome": {
+                    "f1": 79.72865318130694,
+                    "exact_match": 44.85156346364318,
+                    "exact_submatch": 84.83182805130424,
+                    "f1_span": 79.45093377107183,
+                    "precision_span": 74.45933378498435,
+                    "recall_span": 96.98624778224641,
+                    "start_distance": -23.884385333925916,
+                    "middle_distance": 3.6013045342501426,
+                    "end_distance": 31.086994402426203,
+                    "absolute_start_distance": 32.414255702809754,
+                    "absolute_middle_distance": 23.32942181898633,
+                    "absolute_end_distance": 32.07049144700905,
+                    "overall_time": 46201.099313020706
+                }
+            }
+        },
         "es": {
             "medication": {
                 "Levenshtein": {
