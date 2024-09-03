@@ -173,8 +173,8 @@ def main(args):
         logging.info("{}. evidences measured - em: {} f1 span: {}".format(report_id, np.mean(ems), np.mean(f1s_span)))
 
     # store results
-    #with open(output_path, 'w', encoding='utf8') as f:
-    #    json.dump(translated_dataset, f, ensure_ascii=False)
+    with open(output_path, 'w', encoding='utf8') as f:
+        json.dump(translated_dataset, f, ensure_ascii=False)
     
 
     final_score = {

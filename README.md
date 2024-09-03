@@ -344,6 +344,15 @@ When Prompting the translation (using medical message) some of paragraphs needed
 | F1           |77.4 / 79.4    |81.35 / 81.99  | 73.49    | 95.57  | 86.08  |76.83 / 80.42  | 83.03    |
 
 
+
+## Paragraph QA - Removed Answers Ratio
+### Medication
+![medication](./imgs/paragraph_thresholds_medication.png)
+
+### Relations
+![relations](./imgs/paragraph_thresholds_relations.png)
+
+
 ## PRQA
 ### Medication
 

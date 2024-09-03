@@ -21,6 +21,7 @@ parser.add_argument('--dataset', type=str, default='../datasets/emrQA/medication
 parser.add_argument('--model_name', type=str, default='ClinicalBERT')
 parser.add_argument('--model_path', type=str, default='../models/Bio_ClinicalBERT')
 # paragraphizing
+parser.add_argument('--answers_remove_ratio', type=float, default=0.0)
 parser.add_argument('--train_sample_ratio', type=float, default=0.2)
 parser.add_argument('--epochs', type=int, default=3)
 parser.add_argument('--to_reports', type=bool, default=False)
@@ -49,9 +50,18 @@ PREPARE_DATASET = {
     "XLMRLarge": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
 }
 
-DATSET_FILTERS = {
-#    "f1_span": 80.0
-}
+
+def compute_f1_span_threshold(dataset, answers_remove_ratio):
+    f1_span_values = []
+    for report in dataset["data"]:
+        for paragraph in report["paragraphs"]:
+            for qa in paragraph["qas"]:
+                for ans in qa["answers"]:
+                    f1_span_values.append(ans["scores"]["f1_span"])
+    sorted_f1_span_values = sorted(f1_span_values)
+    index = int(answers_remove_ratio * (len(sorted_f1_span_values)))
+    return sorted_f1_span_values[index]
+    
 
 def sample_dataset(data, sample_ratio):
     """
@@ -124,6 +134,9 @@ def main(args):
     if args.to_reports:
         dataset = paragraphs2reports(dataset)
     # filter dataset by score values
+    DATSET_FILTERS = {
+        "f1_span": compute_f1_span_threshold(dataset, args.answers_remove_ratio)
+    }
     dataset, kept, removed = filter_dataset(dataset = dataset, filters = DATSET_FILTERS)
     # split dataset
     train_pars, dev_pars, test_pars = split_dataset(dataset, kept=kept, removed=removed, train_sample_ratio=args.train_sample_ratio, seed=args.seed)
@@ -152,11 +165,15 @@ def main(args):
     scores[args.model_name] = {}
     scores[args.model_name][args.dataset] = {}
     scores[args.model_name][args.dataset][args.seed] = {}
-    scores[args.model_name][args.dataset][args.seed]["QA"] = qa_scores
+    scores[args.model_name][args.dataset][args.seed][args.answers_remove_ratio] = {}
+    scores[args.model_name][args.dataset][args.seed][args.answers_remove_ratio][args.to_reports] = {}
+    scores[args.model_name][args.dataset][args.seed][args.answers_remove_ratio][args.to_reports]["QA"] = qa_scores
 
-    filename = "jsons/{}_{}_{}.json".format(args.model_name, args.dataset.replace("/", "_").replace(".", "_"), args.seed)
+    filename = "jsons/{}_{}_{}_{}_{}.json".format(args.model_name, args.dataset.replace("/", "_").replace(".", "_"), args.seed, args.answers_remove_ratio, args.to_reports)
     with open(filename, 'w') as json_file:
         json.dump(scores, json_file, indent=4)
+
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
