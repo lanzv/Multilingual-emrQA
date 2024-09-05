@@ -93,6 +93,8 @@ def filter_dataset(dataset, filters = {"f1_span": 80.0}):
     curr_data = {"data": []}
     kept = 0
     removed = 0
+    kept_qas = 0
+    removed_qas = 0
     for report in dataset["data"]:
         new_report = {"title": report["title"], "paragraphs": []}
         for paragraph in report["paragraphs"]:
@@ -114,9 +116,13 @@ def filter_dataset(dataset, filters = {"f1_span": 80.0}):
                         new_qa["answers"].append({"text": ans["text"], "answer_start": ans["answer_start"]})
                         kept += 1
                 if len(new_qa["answers"]) > 0:
+                    kept_qas += 1
                     new_paragraph["qas"].append(new_qa)
+                else:
+                    removed_qas += 1
             new_report["paragraphs"].append(new_paragraph)
         curr_data["data"].append(new_report)
 
-    logging.info("Using the {} filtration settings: {} qas kept, {} qas removed ({} % kept)".format(filters, kept, removed, 100.0*kept/(kept+removed)))
-    return curr_data, kept, removed
+    logging.info("Using the {} filtration settings: {} answers kept, {} answers removed ({} % kept)".format(filters, kept, removed, 100.0*kept/(kept+removed)))
+    logging.info("Using the {} filtration settings: {} qas kept, {} qas removed ({} % kept)".format(filters, kept_qas, removed_qas, 100.0*kept_qas/(kept_qas+removed_qas)))
+    return curr_data, kept_qas, removed_qas, kept, removed 
