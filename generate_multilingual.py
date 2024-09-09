@@ -3,7 +3,7 @@ import json
 from collections import defaultdict
 
 # Path to the directory containing the JSON files
-directory_path = "jsons/multilingual"
+directory_path = "jsons/multilingual/"
 
 
 
@@ -36,38 +36,19 @@ merged_data = defaultdict(dict)
 for filename in os.listdir(directory_path):
     if filename.endswith(".json"):
         file_path = os.path.join(directory_path, filename)
-        
+        language = file_path.split("_")[1]
+        if language == "EN" and file_path.split("_")[2] == "FULL": 
+            language = "EN_FULL"
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
+            for model in data:
+                if "BG" in data[model]:
+                    data[model][language] = data[model].pop("BG")
             merge_dicts(merged_data, data)
 
 # Convert defaultdict to a regular dict for pretty-printing
 merged_data = dict(merged_data)
 
-
-# Print the merged JSON to standard output
-#print(json.dumps(merged_data, indent=4))
-
-a = {
-    "./data/translation_aligners/Awesome/medication_pl.json": ("pl", "Awesome", "medication"),
-    "./data/translation_aligners/Awesome/medication_cs.json": ("cs", "Awesome", "medication"),
-    "./data/translation_aligners/FastAlign/medication_el.json": ("el", "FastAlign", "medication"),
-    "./data/translation_aligners/FastAlign/medication_ro.json": ("ro", "FastAlign", "medication"),
-    "./data/translation_aligners/FastAlign/relations_pl.json": ("pl", "FastAlign", "relations"),
-    "./data/translation_aligners/FastAlign/relations_cs.json": ("cs", "FastAlign", "relations"),
-    "./data/translation_aligners/Awesome/relations_ro.json": ("ro", "Awesome", "relations"),
-    "../datasets/emrQA/medication_en.json": ("en", "original", "medication"),
-    "./data/translation_aligners/Awesome/medication_ro.json": ("ro", "Awesome", "medication"),
-    "./data/translation_aligners/Awesome/medication_es.json": ("es", "Awesome", "medication"),
-    "./data/translation_aligners/Awesome/relations_bg.json": ("bg", "Awesome", "relations"),
-    "../datasets/emrQA/relations_en.json": ("en", "original", "relations"),
-    "./data/translation_aligners/Awesome/relations_es.json": ("es", "Awesome", "relations"),
-    "./data/translation_aligners/FastAlign/relations_bg.json": ("bg", "FastAlign", "relations"),
-    "./data/translation_aligners/Awesome/medication_bg.json": ("bg", "Awesome", "medication"),
-    "./data/translation_aligners/Awesome/relations_pl.json": ("pl", "Awesome", "relations"),
-    "./data/translation_aligners/Awesome/relations_cs.json": ("cs", "Awesome", "relations"),
-    "./data/translation_aligners/FastAlign/relations_el.json": ("el", "FastAlign", "relations")
-}
 new_data = {}
 
 for model in merged_data:
@@ -89,19 +70,43 @@ print(json.dumps(new_data, indent=4))
 
 
 import numpy as np
+medication_table = {}
+relations_table = {}
 for model in new_data:
-    print(model)
+    medication_table[model] = {}
+    relations_table[model] = {}
     for lang in new_data[model]:
-        print("\t{}".format(lang))
         for subset in new_data[model][lang]:
-            print("\t\t{}".format(subset))
             ems = []
             f1s = []
+            if len(new_data[model][lang][subset]) != 3:
+                print("{} {} {} has only {} seeds".format(model, lang, subset, len(new_data[model][lang][subset])))
             for seed in new_data[model][lang][subset]:
                 if not "QA" in new_data[model][lang][subset][seed]:
                     continue
                 ems.append(new_data[model][lang][subset][seed]["QA"]["exact_match"])
                 f1s.append(new_data[model][lang][subset][seed]["QA"]["f1"])
-            print("\t\t\tem {}, f1 {}".format(round(np.mean(ems), 2), round(np.mean(f1s), 2)))
-
-       
+            if subset == "medication":
+                medication_table[model][lang] = "{} / {}".format(round(np.mean(ems), 2), round(np.mean(f1s), 2))
+            if subset == "relations":
+                relations_table[model][lang] = "{} / {}".format(round(np.mean(ems), 2), round(np.mean(f1s), 2))
+def print_table(dict_subset, cell_length=13):
+    header = "|{}|".format("EM/F1".center(cell_length))
+    line = "|{}|".format("-"*cell_length)
+    for model in dict_subset:
+        for lang in dict_subset[model]:
+            header += "{}|".format(lang.center(cell_length))
+            line += "{}|".format("-"*cell_length)
+        break
+    table = header + "\n" + line + "\n"
+    
+    for model in dict_subset:
+        table += "|{}|".format(model.center(cell_length))
+        for lang in dict_subset[model]:
+            table += "{}|".format(dict_subset[model][lang].center(cell_length))
+        table += "\n"
+    print(table)
+print("MEDICATION")
+print_table(medication_table)
+print("RELATIONS")
+print_table(relations_table)

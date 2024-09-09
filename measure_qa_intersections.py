@@ -33,7 +33,7 @@ parser.add_argument('--multilingual_train', type=bool, default=False)
 # random
 parser.add_argument('--seed', type=int, help='random seed', default=2)
 
-
+"""
 DATASETS = {
     "medication": {
         "BG": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.45),
@@ -56,7 +56,29 @@ DATASETS = {
         "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.15)
     },
 }
-
+"""
+DATASETS = {
+    "medication": {
+        "BG": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.0),
+        "CS": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.0),
+        "EL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.0),
+        "EN": ("../datasets/emrQA/medication_en.json", False, 1.0),
+        "EN_FULL": ("../datasets/emrQA/medication_en.json", False, 1.0),
+        "ES": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.0),
+        "PL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.0),
+        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.0)
+    },
+    "relations": {
+        "BG": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.0),
+        "CS": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.0),
+        "EL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.0),
+        "EN": ("../datasets/emrQA/relations_en.json", False, 1.0),
+        "EN_FULL": ("../datasets/emrQA/relations_en.json", False, 1.0),
+        "ES": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.0),
+        "PL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.0),
+        "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.0)
+    },
+}
 
 MODELS = {
     "BERTbase": lambda model_path: BERTWrapperPRQA(model_path),
@@ -144,6 +166,8 @@ def get_set_answer_ids(subset):
     for rep_id, report in enumerate(subset["data"]):
         for par_id, paragraph in enumerate(report["paragraphs"]):
             for qa_id, qa in enumerate(paragraph["qas"]):
+                # rename qa id to deterministic string same for all languages
+                qa["id"] = "{}_{}_{}".format(rep_id, par_id, qa_id)
                 for ans_id, ans in enumerate(qa["answers"]):
                     ids.add("{}_{}_{}_{}".format(rep_id, par_id, qa_id, ans_id))
     return ids
@@ -256,7 +280,7 @@ def main(args):
         if args.language == "EN_FULL": 
             train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains["EN"], devs["EN"], tests["EN_FULL"], args.seed)
         else:
-            train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains[language], devs[language], tests[language], args.seed)
+            train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains[args.language], devs[args.language], tests[args.language], args.seed)
     logging.info("datasets are converted to Datset format")
     logging.info("train/dev/test qa pairs: {}|{}|{}".format(len(train_dataset), len(dev_dataset), len(test_dataset)))
 
@@ -284,9 +308,18 @@ def main(args):
         scores[args.model_name][args.language][args.subset][args.seed] = {}
         scores[args.model_name][args.language][args.subset][args.seed]["QA"] = qa_scores
 
-        filename = "jsons/{}_{}_{}_{}.json".format(args.model_name, args.language, args.subset, args.seed)
+        filename = "jsons/monolingual/{}_{}_{}_{}.json".format(args.model_name, args.language, args.subset, args.seed)
         with open(filename, 'w') as json_file:
             json.dump(scores, json_file, indent=4)
+        filename = "predictions/monolingual/{}_{}_{}_{}.json".format(args.model_name, args.language, args.subset, args.seed)
+        with open(filename, 'w') as json_file:
+            json.dump(qa_predictions, json_file, indent=4)
+        gold = {}
+        for data_sample in test_dataset:
+            gold[data_sample["id"]] = data_sample["answers"]
+        filename = "predictions/monolingual/gold_{}_{}_{}.json".format(args.language, args.subset, args.seed)
+        with open(filename, 'w') as json_file:
+            json.dump(gold, json_file, indent=4)
     else:
         for language in test_datasets:
             qa_predictions = model.predict(test_datasets[language], disable_tqdm=True)
@@ -302,14 +335,26 @@ def main(args):
             print(scores)
             scores = {}
             scores[args.model_name] = {}
-            scores[args.model_name][args.language] = {}
-            scores[args.model_name][args.language][args.subset] = {}
-            scores[args.model_name][args.language][args.subset][args.seed] = {}
-            scores[args.model_name][args.language][args.subset][args.seed]["QA"] = qa_scores
+            scores[args.model_name][language] = {}
+            scores[args.model_name][language][args.subset] = {}
+            scores[args.model_name][language][args.subset][args.seed] = {}
+            scores[args.model_name][language][args.subset][args.seed]["QA"] = qa_scores
 
             filename = "jsons/multilingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
             with open(filename, 'w') as json_file:
                 json.dump(scores, json_file, indent=4)
+
+            filename = "predictions/multilingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
+            with open(filename, 'w') as json_file:
+                json.dump(qa_predictions, json_file, indent=4)
+
+
+            gold = {}
+            for data_sample in test_datasets[language]:
+                gold[data_sample["id"]] = data_sample["answers"]
+            filename = "predictions/multilingual/gold_{}_{}_{}.json".format(language, args.subset, args.seed)
+            with open(filename, 'w') as json_file:
+                json.dump(gold, json_file, indent=4)
 
 
 

@@ -3,7 +3,18 @@ import json
 from collections import defaultdict
 
 # Path to the directory containing the JSON files
-directory_path = "jsons/paragraph_thresholds"
+directory_path = "jsons/paragraphs_thresholds"
+
+def sort_dict_alphabetically(d):
+    sorted_dict = {}
+    for key, value in sorted(d.items()):
+        if isinstance(value, dict):
+            sorted_dict[key] = sort_dict_alphabetically(value)  # Recursively sort inner dictionary
+        elif isinstance(value, list):
+            sorted_dict[key] = sorted(value)  # Sort list alphabetically
+        else:
+            sorted_dict[key] = value
+    return sorted_dict
 
 # Function to merge dictionaries
 def merge_dicts(a, b):
@@ -70,7 +81,7 @@ for experiment in merged_data["mBERT"]:
             if not ratio in new_data["mBERT"][lang][subset][align]:
                 new_data["mBERT"][lang][subset][align][ratio] = {}
             new_data["mBERT"][lang][subset][align][ratio][seed] = merged_data["mBERT"][experiment][seed][ratio]["false"]
-
+new_data = sort_dict_alphabetically(new_data)
 print(json.dumps(new_data, indent=4))
 
 

@@ -143,16 +143,45 @@ class BERTWrapperPRQA:
                 padding="max_length",
             )
         except:
-            tokenized_examples = self.tokenizer(
-            examples["question"],
-            examples["context"],
-            truncation="only_second",
-            max_length=384,
-            stride=110, #doc_stride
-            return_overflowing_tokens=True,
-            return_offsets_mapping=True,
-            padding="max_length",
-        )
+            try:
+                tokenized_examples = self.tokenizer(
+                    examples["question"],
+                    examples["context"],
+                    truncation="only_second",
+                    max_length=384,
+                    stride=110, #doc_stride
+                    return_overflowing_tokens=True,
+                    return_offsets_mapping=True,
+                    padding="max_length",
+                )
+            except:
+                filtered_examples = {
+                    "question": [],
+                    "context": [],
+                    "answers": [],
+                    "id": []
+                }
+                for question, context, answers, exmaple_id in zip(examples["question"], examples["context"], examples["answers"], examples["id"]):
+                    filtered_examples["answers"].append(answers)
+                    filtered_examples["id"].append(exmaple_id)
+                    if len(context) + len(question) > 700:
+                        filtered_examples["context"].append(context)
+                        filtered_examples["question"].append(question)
+                    else:
+                        logging.warning("context and question too short:\n'{}'\n'{}'".format(context, question))
+                        filtered_examples["context"].append(context)
+                        filtered_examples["question"].append(question*5)
+                examples = filtered_examples
+                tokenized_examples = self.tokenizer(
+                    examples["question"],
+                    examples["context"],
+                    truncation="only_second",
+                    max_length=384,
+                    stride=10, #doc_stride
+                    return_overflowing_tokens=True,
+                    return_offsets_mapping=True,
+                    padding="max_length",
+                )
 
         # Since one example might give us several features if it has a long context, we need a map from a feature to
         # its corresponding example. This key gives us just that.
@@ -242,7 +271,7 @@ class BERTWrapperPRQA:
                 examples["context"],
                 truncation="only_second",
                 max_length=384,
-                stride=110, #doc_stride
+                stride=10, #doc_stride
                 return_overflowing_tokens=True,
                 return_offsets_mapping=True,
                 padding="max_length",

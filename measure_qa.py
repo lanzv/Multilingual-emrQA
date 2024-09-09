@@ -40,6 +40,7 @@ MODELS = {
     "mBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "ClinicalBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "XLMRLarge": lambda model_path: BERTWrapperPRQA(model_path),
+    "mDistil": lambda model_path: BERTWrapperPRQA(model_path),
 }
 
 
@@ -48,6 +49,7 @@ PREPARE_DATASET = {
     "mBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "ClinicalBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "XLMRLarge": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
+    "mDistil": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
 }
 
 
@@ -91,7 +93,7 @@ def sample_dataset(data, sample_ratio):
     return new_data_json
 
 
-def split_dataset(dataset, kept, removed, train_ratio=0.7, dev_ratio=0.1, train_sample_ratio=0.2, seed=54):
+def split_dataset(dataset, answers_remove_ratio, train_ratio=0.7, dev_ratio=0.1, train_sample_ratio=0.2, seed=54):
     random.seed(seed)
     curr_data = dataset
     assert train_ratio + dev_ratio <= 1.0
@@ -109,6 +111,13 @@ def split_dataset(dataset, kept, removed, train_ratio=0.7, dev_ratio=0.1, train_
     test = {'data': [], 'version': 1.0}
     for i in range(train_note_num + dev_note_num, note_num):
         test['data'].append(curr_data['data'][note_list[i]])
+
+    # filter dataset by score values
+    DATSET_FILTERS = {
+        "f1_span": compute_f1_span_threshold(dataset, answers_remove_ratio)
+    }
+    train, kept, removed, kept_answers, removed_answers = filter_dataset(dataset = train, filters = DATSET_FILTERS)
+    train["version"] = 1.0
     # sample dataset
     if train_sample_ratio < 1.0:
         new_train = sample_dataset(train, train_sample_ratio/(float(kept)/(float(kept)+float(removed))))
@@ -133,13 +142,8 @@ def main(args):
     # merge paragraphs to single report if set
     if args.to_reports:
         dataset = paragraphs2reports(dataset)
-    # filter dataset by score values
-    DATSET_FILTERS = {
-        "f1_span": compute_f1_span_threshold(dataset, args.answers_remove_ratio)
-    }
-    dataset, kept, removed = filter_dataset(dataset = dataset, filters = DATSET_FILTERS)
     # split dataset
-    train_pars, dev_pars, test_pars = split_dataset(dataset, kept=kept, removed=removed, train_sample_ratio=args.train_sample_ratio, seed=args.seed)
+    train_pars, dev_pars, test_pars = split_dataset(dataset, answers_remove_ratio=args.answers_remove_ratio, train_sample_ratio=args.train_sample_ratio, seed=args.seed)
     # prepare data
     train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](train_pars, dev_pars, test_pars, args.seed)
     logging.info("datasets are converted to Datset format")
@@ -169,7 +173,7 @@ def main(args):
     scores[args.model_name][args.dataset][args.seed][args.answers_remove_ratio][args.to_reports] = {}
     scores[args.model_name][args.dataset][args.seed][args.answers_remove_ratio][args.to_reports]["QA"] = qa_scores
 
-    filename = "jsons/{}_{}_{}_{}_{}.json".format(args.model_name, args.dataset.replace("/", "_").replace(".", "_"), args.seed, args.answers_remove_ratio, args.to_reports)
+    filename = "jsons/paragraphs_thresholds/{}_{}_{}_{}_{}.json".format(args.model_name, args.dataset.replace("/", "_").replace(".", "_"), args.seed, args.answers_remove_ratio, args.to_reports)
     with open(filename, 'w') as json_file:
         json.dump(scores, json_file, indent=4)
 
