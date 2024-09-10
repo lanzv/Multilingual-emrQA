@@ -33,26 +33,26 @@ parser.add_argument('--multilingual_train', type=bool, default=False)
 # random
 parser.add_argument('--seed', type=int, help='random seed', default=2)
 
-"""
+
 DATASETS = {
     "medication": {
-        "BG": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.45),
-        "CS": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.37),
-        "EL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.62),
+        "BG": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.15),
+        "CS": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.15),
+        "EL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.15),
         "EN": ("../datasets/emrQA/medication_en.json", False, 1.0),
         "EN_FULL": ("../datasets/emrQA/medication_en.json", False, 1.0),
-        "ES": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.29),
-        "PL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.45),
-        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.38)
+        "ES": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.15),
+        "PL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.15),
+        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.15)
     },
     "relations": {
-        "BG": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.30),
-        "CS": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.20),
-        "EL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.44),
+        "BG": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.15),
+        "CS": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.15),
+        "EL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.15),
         "EN": ("../datasets/emrQA/relations_en.json", False, 1.0),
         "EN_FULL": ("../datasets/emrQA/relations_en.json", False, 1.0),
-        "ES": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.10),
-        "PL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.43),
+        "ES": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.15),
+        "PL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.15),
         "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.15)
     },
 }
@@ -79,6 +79,7 @@ DATASETS = {
         "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.0)
     },
 }
+"""
 
 MODELS = {
     "BERTbase": lambda model_path: BERTWrapperPRQA(model_path),
