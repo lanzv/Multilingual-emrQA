@@ -40,6 +40,25 @@ For even more interesting observations and results, check the paper.
 
 
 ## How to run experiments
+!!! Important:
+
+To run these experiments with the default arguments, ensure that the following folders exist in the root directory of this repository:
+
+- `/data/`
+  - `/data/translation_aligners`
+  - `/data/translations`
+- `/jsons/`
+  - `/jsons/monolingual`
+  - `/jsons/multilingual`
+  - `/jsons/multilingual_wtgt`
+  - `/jsons/paragraphs_thresholds`
+- `/predictions/`
+  - `/predictions/monolingual`
+  - `/predictions/multilingual`
+
+Also put the emrQA dataset as `data.json` file into the `/data/` directory. But you can specify the path differntly via script arguments.
+
+
 For more details, review the particular scripts to examine the arguments and their associated options that are explicitly hardcoded within the argument parsing dictionaries under the 'ArgumentParser' part.
 
 ### `compare_translators.py`
