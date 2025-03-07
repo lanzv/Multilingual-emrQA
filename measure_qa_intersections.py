@@ -30,6 +30,8 @@ parser.add_argument('--epochs', type=int, default=3)
 
 parser.add_argument('--multilingual_train', type=bool, default=False)
 
+parser.add_argument('--remove_target_language_from_train', type=bool, default=False)
+
 # random
 parser.add_argument('--seed', type=int, help='random seed', default=2)
 
@@ -40,48 +42,38 @@ DATASETS = {
         "CS": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.15),
         "EL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.15),
         "EN": ("../datasets/emrQA/medication_en.json", False, 1.0),
-        "EN_FULL": ("../datasets/emrQA/medication_en.json", False, 1.0),
         "ES": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.15),
         "PL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.15),
-        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.15)
+        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.15),
+        "BG#FULL": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.0),
+        "CS#FULL": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.0),
+        "EL#FULL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.0),
+        "EN#FULL": ("../datasets/emrQA/medication_en.json", False, 1.0),
+        "ES#FULL": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.0),
+        "PL#FULL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.0),
+        "RO#FULL": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.0),
     },
     "relations": {
         "BG": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.15),
         "CS": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.15),
         "EL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.15),
         "EN": ("../datasets/emrQA/relations_en.json", False, 1.0),
-        "EN_FULL": ("../datasets/emrQA/relations_en.json", False, 1.0),
         "ES": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.15),
         "PL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.15),
-        "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.15)
+        "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.15),
+        "BG#FULL": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.0),
+        "CS#FULL": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.0),
+        "EL#FULL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.0),
+        "EN#FULL": ("../datasets/emrQA/relations_en.json", False, 1.0),
+        "ES#FULL": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.0),
+        "PL#FULL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.0),
+        "RO#FULL": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.0)
     },
 }
-"""
-DATASETS = {
-    "medication": {
-        "BG": ("./data/translation_aligners/Awesome/medication_bg.json", True, 0.0),
-        "CS": ("./data/translation_aligners/Awesome/medication_cs.json", True, 0.0),
-        "EL": ("./data/translation_aligners/FastAlign/medication_el.json", True, 0.0),
-        "EN": ("../datasets/emrQA/medication_en.json", False, 1.0),
-        "EN_FULL": ("../datasets/emrQA/medication_en.json", False, 1.0),
-        "ES": ("./data/translation_aligners/Awesome/medication_es.json", True, 0.0),
-        "PL": ("./data/translation_aligners/Awesome/medication_pl.json", True, 0.0),
-        "RO": ("./data/translation_aligners/Awesome/medication_ro.json", True, 0.0)
-    },
-    "relations": {
-        "BG": ("./data/translation_aligners/Awesome/relations_bg.json", True, 0.0),
-        "CS": ("./data/translation_aligners/Awesome/relations_cs.json", True, 0.0),
-        "EL": ("./data/translation_aligners/FastAlign/relations_el.json", True, 0.0),
-        "EN": ("../datasets/emrQA/relations_en.json", False, 1.0),
-        "EN_FULL": ("../datasets/emrQA/relations_en.json", False, 1.0),
-        "ES": ("./data/translation_aligners/Awesome/relations_es.json", True, 0.0),
-        "PL": ("./data/translation_aligners/FastAlign/relations_pl.json", True, 0.0),
-        "RO": ("./data/translation_aligners/Awesome/relations_ro.json", True, 0.0)
-    },
-}
-"""
+
 
 MODELS = {
+    "BioBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "BERTbase": lambda model_path: BERTWrapperPRQA(model_path),
     "mBERT": lambda model_path: BERTWrapperPRQA(model_path),
     "ClinicalBERT": lambda model_path: BERTWrapperPRQA(model_path),
@@ -92,6 +84,7 @@ MODELS = {
 
 
 PREPARE_DATASET = {
+    "BioBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "BERTbase": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "mBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
     "ClinicalBERT": lambda train_pars, dev_pars, test_pars, seed: get_dataset_bert_format(train_pars, dev_pars, test_pars, seed),
@@ -233,7 +226,7 @@ def main(args):
         }
         dataset, kept, removed, kept_answers, removed_answers = filter_dataset(dataset = dataset, filters = DATSET_FILTERS)
         # split dataset
-        if not language == "EN_FULL": 
+        if not "#FULL" in language: 
             trains[language], devs[language], tests[language] = split_dataset(dataset, kept=kept, removed=removed, note_list=note_list, train_note_num=train_note_num, dev_note_num=dev_note_num, note_num=note_num, train_sample_ratio=args.train_sample_ratio)
         else:
             _, _, tests[language] = split_dataset(dataset, kept=kept, removed=removed, note_list=note_list, train_note_num=train_note_num, dev_note_num=dev_note_num, note_num=note_num, train_sample_ratio=args.train_sample_ratio)
@@ -247,7 +240,7 @@ def main(args):
 
     # filter tests by intersection answer ids
     for language in tests:
-        if not language == "EN_FULL":
+        if not "#FULL" in language:
             tests[language] = filter_set_by_ids(tests[language], intersection_test_answer_ids)
     
     # extend all ids by language code
@@ -265,25 +258,27 @@ def main(args):
         train_datasets = []
         dev_datasets = []
         test_datasets = {}
-        for language in trains:
-            train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains[language], devs[language], tests[language], args.seed)
-            train_datasets.append(train_dataset)
-            dev_datasets.append(dev_dataset)
-            test_datasets[language] = test_dataset
-        _, _, test_dataset = PREPARE_DATASET[args.model_name](trains["EN"], devs["EN"], tests["EN_FULL"], args.seed)
-        test_datasets["EN_FULL"] = test_dataset
+        for language in tests:
+            if not "#FULL" in language:
+                train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains[language], devs[language], tests[language], args.seed)
+                if (not args.remove_target_language_from_train) or (language != args.language.replace("#FULL","")):
+                    train_datasets.append(train_dataset)
+                dev_datasets.append(dev_dataset)
+                test_datasets[language] = test_dataset
+            else:
+                _, _, test_dataset = PREPARE_DATASET[args.model_name](trains[language.split("#")[0]], devs[language.split("#")[0]], tests[language], args.seed)
+                test_datasets[language] = test_dataset
         train_dataset = concatenate_datasets(train_datasets)
         train_dataset = train_dataset.shuffle(seed=args.seed)
         dev_dataset = concatenate_datasets(dev_datasets)
         dev_dataset = dev_dataset.shuffle(seed=args.seed)
         dev_dataset = dev_dataset.train_test_split(test_size=0.14)["test"]
     else:
-        if args.language == "EN_FULL": 
-            train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains["EN"], devs["EN"], tests["EN_FULL"], args.seed)
-        else:
-            train_dataset, dev_dataset, test_dataset = PREPARE_DATASET[args.model_name](trains[args.language], devs[args.language], tests[args.language], args.seed)
-    logging.info("datasets are converted to Datset format")
-    logging.info("train/dev/test qa pairs: {}|{}|{}".format(len(train_dataset), len(dev_dataset), len(test_dataset)))
+        test_datasets = {}
+        _, _, test_datasets[args.language+"#FULL"] = PREPARE_DATASET[args.model_name](trains[args.language], devs[args.language], tests[args.language+"#FULL"], args.seed)
+        train_dataset, dev_dataset, test_datasets[args.language] = PREPARE_DATASET[args.model_name](trains[args.language], devs[args.language], tests[args.language], args.seed)
+        logging.info("datasets are converted to Datset format")
+        logging.info("train/dev/test intersection/test full qa pairs: {}|{}|{}|{}".format(len(train_dataset), len(dev_dataset), len(test_datasets[args.language]), len(test_datasets[args.language+"#FULL"])))
 
 
     # TRAIN AND EVALUATE MODEL
@@ -291,37 +286,6 @@ def main(args):
     model = MODELS[args.model_name](args.model_path)
     model.train(train_dataset, dev_dataset, epochs = args.epochs, disable_tqdm=True, seed=args.seed)
     if not args.multilingual_train:
-        qa_predictions = model.predict(test_dataset, disable_tqdm=True)
-        # evaluate
-        qa_scores = Evaluate.question_answering(test_dataset, qa_predictions)
-        logging.info("QA scores: {}".format(qa_scores))
-
-        scores = {}
-        scores[args.model_name] = {}
-        scores[args.model_name]["QA"] = qa_scores
-
-        scores = json.dumps(scores, indent = 4) 
-        print(scores)
-        scores = {}
-        scores[args.model_name] = {}
-        scores[args.model_name][args.language] = {}
-        scores[args.model_name][args.language][args.subset] = {}
-        scores[args.model_name][args.language][args.subset][args.seed] = {}
-        scores[args.model_name][args.language][args.subset][args.seed]["QA"] = qa_scores
-
-        filename = "jsons/monolingual/{}_{}_{}_{}.json".format(args.model_name, args.language, args.subset, args.seed)
-        with open(filename, 'w') as json_file:
-            json.dump(scores, json_file, indent=4)
-        filename = "predictions/monolingual/{}_{}_{}_{}.json".format(args.model_name, args.language, args.subset, args.seed)
-        with open(filename, 'w') as json_file:
-            json.dump(qa_predictions, json_file, indent=4)
-        gold = {}
-        for data_sample in test_dataset:
-            gold[data_sample["id"]] = data_sample["answers"]
-        filename = "predictions/monolingual/gold_{}_{}_{}.json".format(args.language, args.subset, args.seed)
-        with open(filename, 'w') as json_file:
-            json.dump(gold, json_file, indent=4)
-    else:
         for language in test_datasets:
             qa_predictions = model.predict(test_datasets[language], disable_tqdm=True)
             # evaluate
@@ -341,22 +305,48 @@ def main(args):
             scores[args.model_name][language][args.subset][args.seed] = {}
             scores[args.model_name][language][args.subset][args.seed]["QA"] = qa_scores
 
-            filename = "jsons/multilingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
+            filename = "jsons/monolingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
             with open(filename, 'w') as json_file:
                 json.dump(scores, json_file, indent=4)
-
-            filename = "predictions/multilingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
+            filename = "predictions/monolingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
             with open(filename, 'w') as json_file:
                 json.dump(qa_predictions, json_file, indent=4)
-
-
             gold = {}
             for data_sample in test_datasets[language]:
                 gold[data_sample["id"]] = data_sample["answers"]
-            filename = "predictions/multilingual/gold_{}_{}_{}.json".format(language, args.subset, args.seed)
+            filename = "predictions/monolingual/gold_{}_{}_{}.json".format(language, args.subset, args.seed)
             with open(filename, 'w') as json_file:
                 json.dump(gold, json_file, indent=4)
+    else:
+        for language in test_datasets:
+            if args.remove_target_language_from_train and language != args.language:
+                continue
+            qa_predictions = model.predict(test_datasets[language], disable_tqdm=True)
+            # evaluate
+            qa_scores = Evaluate.question_answering(test_datasets[language], qa_predictions)
+            logging.info("QA scores: {}".format(qa_scores))
 
+            scores = {}
+            scores[args.model_name] = {}
+            scores[args.model_name]["QA"] = qa_scores
+
+            scores = json.dumps(scores, indent = 4) 
+            print(scores)
+            scores = {}
+            scores[args.model_name] = {}
+            scores[args.model_name][language] = {}
+            scores[args.model_name][language][args.subset] = {}
+            scores[args.model_name][language][args.subset][args.seed] = {}
+            scores[args.model_name][language][args.subset][args.seed]["QA"] = qa_scores
+
+            if not args.remove_target_language_from_train:       
+                filename = "jsons/multilingual/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
+                with open(filename, 'w') as json_file:
+                    json.dump(scores, json_file, indent=4)
+            else:
+                filename = "jsons/multilingual_wtgt/{}_{}_{}_{}.json".format(args.model_name, language, args.subset, args.seed)
+                with open(filename, 'w') as json_file:
+                    json.dump(scores, json_file, indent=4)
 
 
 if __name__ == '__main__':

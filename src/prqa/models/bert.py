@@ -50,7 +50,7 @@ class BERTWrapperPRQA:
             per_device_eval_batch_size=eval_batch_size,
             num_train_epochs=epochs,
             weight_decay=weight_decay,
-            push_to_hub=True,
+            push_to_hub=False,
             disable_tqdm=disable_tqdm
         )
 
