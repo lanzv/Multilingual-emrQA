@@ -1,8 +1,8 @@
 import argparse
 import logging
-from src.prqa.eval import Evaluate
-from src.prqa.models.bert import BERTWrapperPRQA
-from src.prqa.models.dataset import emrqa2qa_dataset, get_dataset_bert_format, paragraphs2reports, filter_dataset
+from src.qa.eval import Evaluate
+from src.qa.models.bert import BERTWrapperPRQA
+from src.qa.models.dataset import emrqa2qa_dataset, get_dataset_bert_format, paragraphs2reports, filter_dataset
 import json
 import random
 from datasets.utils.logging import disable_progress_bar

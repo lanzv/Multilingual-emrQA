@@ -24,7 +24,6 @@ parser.add_argument('--models_dir', type=str, default='../models')
 parser.add_argument('--model', type=str, default='NLLB_600M')
 parser.add_argument('--seed', type=int, help='random seed', default=55)
 parser.add_argument('--batch_size', type=int, default=50)
-parser.add_argument("-f", type=str, default="asdasd", help="jupyter file something")
 
 LANGUAGES = ["cs", "de", "fr", "hu", "pl", "es", "sv"]
 MODEL_LIST = ["NLLB_600M", "NLLB_1_3B_dis", "NLLB_1_3B", "MadLad_3B", "NLLB_3_3B", "LINDAT", "MadLad_7B", "MadLad_10B", "NLLB_54B"]

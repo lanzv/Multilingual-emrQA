@@ -1,0 +1,10 @@
+/data/translation_aligners
+/data/translations
+
+/jsons/monolingual
+/jsons/multilingual
+/jsons/multilingual_wtgt
+/jsons/paragraphs_thresholds
+
+/predictions/monolingual
+/predictions/multilingual

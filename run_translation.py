@@ -25,7 +25,6 @@ parser.add_argument('--disable_prompting', type=bool, default=False)
 parser.add_argument('--translated_medical_info_message', type=str, default='Na základě lékařských zpráv.')
 parser.add_argument('--translation_model_path', type=str, default='../models/madlad400-3b-mt')
 parser.add_argument('--translation', type=bool, default=False)
-parser.add_argument('--evidence_alignment', type=bool, default=False)
 parser.add_argument('--topics', metavar='N', type=str, nargs='+', default=["medication", "relations"])
 parser.add_argument('--seed', type=int, help='random seed', default=55)
 
@@ -70,11 +69,7 @@ def main(args):
             if len(context_times) > 0:
                 logging.info("\tAverage Report's Paragraphs Time: {} s\n\t\tThe longest report: {} s\n\t\tThe shortest report {} s".format(np.average(context_times), np.max(context_times), np.min(context_times)))
             logging.info("\tTotal time: {} s".format((time.time() - dataset_time)))
-
-
-    if args.evidence_alignment:
-        # TODO
-        pass        
+       
 
 if __name__ == '__main__':
     args = parser.parse_args()

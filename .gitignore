@@ -161,9 +161,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 /scripts_obsolete
-/data
+/data_a
 /scripts/slurm_outputs
 /model_output_dir
 *.ipynb
-jsons/
-predictions/
+/jsons_a
+/predictions_a
