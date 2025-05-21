@@ -1,7 +1,7 @@
 # Multilingual emrQA
 
 
-This repository contains the source code for the CL4Health @ NAACL2025 paper **When Multilingual Models Compete with Monolingual Domain-Specific Models in Clinical Question Answering**. 
+This repository contains the source code for the CL4Health @ NAACL2025 paper [**When Multilingual Models Compete with Monolingual Domain-Specific Models in Clinical Question Answering**](https://aclanthology.org/2025.cl4health-1.6.pdf). 
 
 ### Overview
 The paper explores the performance of general-domain multilingual models on the clinical Question Answering task using Medication and Relations subsets of emrQA. To improve model performance, we employ multilingual data augmentation, translating an English clinical QA dataset into six additional languages. Our approach involves a translation pipeline that translates report paragraphs and questions, projection of evidence (answers) into target languages, ensuring consistency in question-answer pairs across languages, and filtering out low-quality instances. We systematically evaluate several multilingual models fine-tuned in both mono- and multilingual settings.
@@ -61,17 +61,17 @@ Also put the emrQA dataset as `data.json` file into the `/data/` directory. But 
 
 #### To replicate paper experiments, run scripts in the following order
 with arguments described below
-1. `compare_translators.py`
-2. `run_translation.py`
-3. `run_alignment.py`
-4. `run_report_qa.py`
-5. `run_paragraph_qa.py`
+1. `00_compare_translators.py`
+2. `01_run_translation.py`
+3. `02_run_alignment.py`
+4. `03_run_report_qa.py`
+5. `04_run_paragraph_qa.py`
 
 
 For more details, review the particular scripts to examine the arguments and their associated options that are explicitly hardcoded within the argument parsing dictionaries under the 'ArgumentParser' part.
 
-### `compare_translators.py`
-The script `compare_translators.py` evaluates different translation models on a medical dataset ***khresmoi***. The script loads test data, applies the specified translation model and evaluate results.
+### `00_compare_translators.py`
+The script `00_compare_translators.py` evaluates different translation models on a medical dataset ***khresmoi***. The script loads test data, applies the specified translation model and evaluate results.
 
 #### Arguments
 - data_dir: Path to the test dataset (default: ../datasets/khresmoi-summary-test-set-2.0).
@@ -94,7 +94,7 @@ The following models are supported:
 
 #### Example Command
 ```sh
-python compare_translators.py --data_dir ../datasets/khresmoi-summary-test-set-2.0 \
+python 00_compare_translators.py --data_dir ../datasets/khresmoi-summary-test-set-2.0 \
                               --models_dir ../models \
                               --model NLLB_600M \
                               --seed 55 \
@@ -103,9 +103,9 @@ python compare_translators.py --data_dir ../datasets/khresmoi-summary-test-set-2
 
 
 
-### `run_translation.py`
+### `01_run_translation.py`
 
-The script `run_translation.py` translates paragraphs and questions from the **emrQA** English dataset into a specified target language.
+The script `01_run_translation.py` translates paragraphs and questions from the **emrQA** English dataset into a specified target language. The output file (e.g. `./data/translations/medication_cs.json`) has similar format to the input file `./data/data.json`. Reports with their question-answer pairs are segmented and split into paragraphs, allowing us to work with them separately; these paragraphs are then translated into the target language. Each paragraph context is represented here as a list of paragraph parts—ideally containing only one item, the whole paragraph. Multiple parts appear only when the final paragraph is too long to ensure high-quality translation. Questions are just replaced by their translated versions. Answers stay the same in original language (English) with the offset span showing to the original paragraph (that are not part of the output file anymore) rather then to the new translated ones.
 
 #### Arguments
 - data_path: Path to the input emrQA dataset (default: ./data/data.json).
@@ -120,7 +120,7 @@ The script `run_translation.py` translates paragraphs and questions from the **e
 
 #### Example Command
 ```bash
-python run_translation.py --data_path ./data/data.json \
+python 01_run_translation.py --data_path ./data/data.json \
                           --output_dir ./data/translations \
                           --target_language cs \
                           --translation_model_path ../models/madlad400-3b-mt \
@@ -131,9 +131,9 @@ python run_translation.py --data_path ./data/data.json \
 
 
 
-### `run_alignment.py`
+### `02_run_alignment.py`
 
-The script `run_alignment.py` aligns answer spans from the original **emrQA** dataset to the translated paragraphs and questions. It computes alignment scores and confidence values for each aligned answer.
+The script `02_run_alignment.py` aligns answer spans from the original **emrQA** dataset to the translated paragraphs and questions. It computes alignment scores and confidence values for each aligned answer. The input file here is the output file from the previous stage `01_run_translation.py` (e.g. `./data/translations/medication_cs.json`) and the original dataset `./data/data.json`. The output file of this `02_run_alignment.py` script has then exactly the same format as `medication_cs.json` from previous stage. The only difference is that answers are now projected to the current translated paragraphs and also that each answer object containing fields `text` and `answer_start` also contains field `"scores": {"exact_match": .., "exact_submatch": .., "f1": .., "f1_span": .., .."` computed from the unsupervised forward-backward substring alignment evaluation method used for the filtration in the following stages `03_run_report_qa.py` and `04_run_report_qa.py`.
 
 
 #### Arguments
@@ -148,7 +148,7 @@ The script `run_alignment.py` aligns answer spans from the original **emrQA** da
 
 #### Example Command
 ```bash
-python run_alignment.py --translation_dataset ./data/translations/medication_cs.json \
+python 02_run_alignment.py --translation_dataset ./data/translations/medication_cs.json \
                         --dataset ./data/data.json \
                         --output_dir ./data/translation_aligners \
                         --dataset_title medication \
@@ -159,9 +159,9 @@ python run_alignment.py --translation_dataset ./data/translations/medication_cs.
 ```
 
 
-### `run_report_qa.py`
+### `03_run_report_qa.py`
 
-The script `run_report_qa.py` runs a QA experiment on both full reports and paragraph-level QA tasks. It also supports the removal of low-quality instances by specifying a threshold hyperparameter, allowing you to analyze its effect on QA performance.
+The script `03_run_report_qa.py` runs a QA experiment on both full reports and paragraph-level QA tasks. It also supports the removal of low-quality instances by specifying a threshold hyperparameter, allowing you to analyze its effect on QA performance.
 
 #### Arguments
 - `dataset`: Path to the dataset translation (default: `../datasets/emrQA/medication_bg.json`).
@@ -176,7 +176,7 @@ The script `run_report_qa.py` runs a QA experiment on both full reports and para
 
 #### Example Command
 ```bash
-python run_report_qa.py --dataset ../datasets/emrQA/medication_bg.json \
+python 03_run_report_qa.py --dataset ../datasets/emrQA/medication_bg.json \
                        --model_name ClinicalBERT \
                        --model_path ../models/Bio_ClinicalBERT \
                        --answers_remove_ratio 0.1 \
@@ -187,9 +187,9 @@ python run_report_qa.py --dataset ../datasets/emrQA/medication_bg.json \
                        --seed 2
 ```
 
-### `run_paragraph_qa.py`
+### `04_run_paragraph_qa.py`
 
-The script `run_paragraph_qa.py` is the final step of the paper, used to evaluate the performance of clinical and general-domain multilingual models on the Paragraph QA task. You can either use multilingual augmented data or fine-tune in a monolingual setting. The script evaluates both, the performance of model in an intersection test sets mode as well as in a full tests mode.
+The script `04_run_paragraph_qa.py` is the final step of the paper, used to evaluate the performance of clinical and general-domain multilingual models on the Paragraph QA task. You can either use multilingual augmented data or fine-tune in a monolingual setting. The script evaluates both, the performance of model in an intersection test sets mode as well as in a full tests mode.
 
 #### Arguments
 - `subset`: Subset of the dataset (default: `medication`).
@@ -206,7 +206,7 @@ The script `run_paragraph_qa.py` is the final step of the paper, used to evaluat
 
 #### Example Command
 ```bash
-python run_paragraph_qa.py --subset medication \
+python 04_run_paragraph_qa.py --subset medication \
                            --language BG \
                            --model_name ClinicalBERT \
                            --model_path ../models/Bio_ClinicalBERT \
@@ -224,7 +224,23 @@ python run_paragraph_qa.py --subset medication \
 
 
 ## Citation
-To be completed at the time of the NAACL2025 conference - early May.
+
 ```bib
-TODO, When Multilingual Models Compete with Monolingual Domain-Specific Models in Clinical Question Answering, Vojtech Lanz and Pavel Pecina, CL4Health @ NAACL2025
+@inproceedings{lanz-pecina-2025-multilingual,
+    title = "When Multilingual Models Compete with Monolingual Domain-Specific Models in Clinical Question Answering",
+    author = "Lanz, Vojtech  and
+      Pecina, Pavel",
+    editor = "Ananiadou, Sophia  and
+      Demner-Fushman, Dina  and
+      Gupta, Deepak  and
+      Thompson, Paul",
+    booktitle = "Proceedings of the Second Workshop on Patient-Oriented Language Processing (CL4Health)",
+    month = may,
+    year = "2025",
+    address = "Albuquerque, New Mexico",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.cl4health-1.6/",
+    pages = "69--82",
+    ISBN = "979-8-89176-238-1",
+}
 ```
